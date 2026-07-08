@@ -14,11 +14,20 @@ crops/
 montages/
 labels.csv
 *.mp4
+*.mkv
+*.mov
+*.avi
+*.m4v
+*.webm
 
 # ───────── Dataset thật (ảnh người, PII — KHÔNG public) ─────────
 myreid/
+myreid2/
 myreid.zip
 *.zip
+
+# ───────── Folder QR (ảnh chọn tay từ dataset, PII — KHÔNG public) ─────────
+qr/
 
 # ───────── Ảnh/screenshot tạm khi test ─────────
 _test_*.html
@@ -30,3 +39,36 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# ═════════ BỔ SUNG: chia sẻ web label_server lên GitHub ═════════
+
+# ───────── Model weights (quá lớn cho GitHub >100MB — chia sẻ riêng: Drive/Release/Git-LFS) ─────────
+*.onnx
+*.pth
+*.pt
+*.npz
+*.npy
+!head_detect.pt          # GIỮ LẠI: model detect đầu người (~15MB) mà extract_crops cần để chạy
+
+# ───────── Dataset / output nặng + ảnh người (PII — KHÔNG public) ─────────
+myReIDNew/
+myReIDNew2/
+bounding_box_train/
+bounding_box_test/
+query/
+_identities/
+images_REID/
+output_classified/
+reid_calibration_output/
+reid_eval_report.txt
+
+# ───────── Repo bên thứ ba (clone về, không phải code của mình) ─────────
+_transreid_repo/
+
+# ───────── Script thí nghiệm / phân tích (KHÔNG thuộc web tool) ─────────
+classify_reid.py
+reid_learn.py
+dedup_dataset.py
+fix_leakage.py
+export_transreid_onnx.py
+test.py

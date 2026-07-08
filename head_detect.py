@@ -31,15 +31,39 @@ if not _MODEL_PATH.exists():
 
 # ── Lazy singleton ─────────────────────────────────────────────────────────────
 _model: YOLO | None = None
+_DEVICE = None   # thiết bị đã chốt sau khi load ("cpu" hoặc 0/1/... cho GPU)
+
+
+def _resolve_device():
+    """Chọn thiết bị: ép qua REID_DEVICE nếu có, không thì GPU khả dụng, cuối cùng CPU."""
+    env = os.environ.get("REID_DEVICE")
+    if env:
+        return env
+    try:
+        import torch
+        if torch.cuda.is_available():
+            return 0
+    except Exception:
+        pass
+    return "cpu"
 
 
 def _load_model() -> YOLO:
-    global _model
+    global _model, _DEVICE
     if _model is None:
         _model = YOLO(str(_MODEL_PATH), task="detect")
-        # Warm-up pass so first real call is not slow
+        _DEVICE = _resolve_device()
         dummy = np.zeros((64, 64, 3), dtype=np.uint8)
-        _model(dummy, verbose=False)
+        try:
+            _model(dummy, device=_DEVICE, verbose=False)   # warm-up
+        except Exception as e:
+            # GPU lỗi (vd cuDNN: "unable to find an engine") → tự chuyển sang CPU
+            if _DEVICE != "cpu":
+                print(f"[head_detect] GPU loi ({type(e).__name__}: {e}). Chuyen sang CPU (cham hon nhung chay duoc).")
+                _DEVICE = "cpu"
+                _model(dummy, device=_DEVICE, verbose=False)
+            else:
+                raise
     return _model
 
 
@@ -68,8 +92,19 @@ def detect_heads(
         float confidence score for each detected head.
         Returns an empty list when no heads are found.
     """
+    global _DEVICE
     model = _load_model()
-    results = model(frame, conf=conf, iou=iou, verbose=False)
+    try:
+        results = model(frame, conf=conf, iou=iou, device=_DEVICE, verbose=False)
+    except Exception as e:
+        # GPU lỗi giữa chừng (cuDNN "unable to find an engine") → chuyển hẳn sang
+        # CPU và chạy lại frame này; các frame sau cũng chạy CPU (chậm nhưng xong).
+        if _DEVICE != "cpu":
+            print(f"[head_detect] GPU loi khi infer ({type(e).__name__}). Chuyen sang CPU.")
+            _DEVICE = "cpu"
+            results = model(frame, conf=conf, iou=iou, device="cpu", verbose=False)
+        else:
+            raise
 
     boxes: list[tuple[int, int, int, int, float]] = []
     for r in results:

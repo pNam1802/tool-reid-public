@@ -1,7 +1,7 @@
 # ===================== CẤU HÌNH — SỬA Ở ĐÂY =====================
 CROPS_DIR   = "crops"        # thư mục output bước 1 (extract_crops.py)
 LABELS_CSV  = "labels.csv"   # file CSV đã gán nhãn (từ bước 3)
-OUTPUT_DIR  = "myreid"       # thư mục dataset đầu ra (Market-1501 format)
+OUTPUT_DIR  = "myReIDNew"    # thư mục dataset đầu ra (Market-1501 format) — KHÔNG ghi đè myreid thật
 TEST_RATIO  = 0.3            # tỉ lệ identity đưa vào test (chỉ với identity có ≥2 camera)
 RANDOM_SEED = 42             # seed ngẫu nhiên để kết quả có thể tái tạo
 # =================================================================
@@ -161,6 +161,19 @@ def main():
             for img in all_images[1:]:
                 copy_to_dataset(img, gallery_dir, new_pid, cam, int(img.stem[1:]))
                 stats["gallery"] += 1
+
+    # --- Ảnh đại diện (_identities/pid_XXXX.jpg): 1 crop/identity để web hiện thumbnail + đếm đúng ---
+    idd = output_dir / "_identities"
+    if idd.exists():
+        shutil.rmtree(str(idd))
+    idd.mkdir(parents=True, exist_ok=True)
+    for old_pid in all_pids_sorted:
+        new_pid = pid_remap[old_pid]
+        for row in pid_rows[old_pid]:
+            imgs = get_track_images(crops_dir, row)
+            if imgs:
+                shutil.copy2(str(imgs[len(imgs) // 2]), str(idd / f"pid_{new_pid:04d}.jpg"))
+                break
 
     # --- In thống kê ---
     print(f"\n=== THỐNG KÊ DATASET ===")

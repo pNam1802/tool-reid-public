@@ -1,14 +1,14 @@
 # ===================== CẤU HÌNH — SỬA Ở ĐÂY =====================
-VIDEO_PATH    = "video/20260613_1510_cam3.mp4"   # đường dẫn đến file video
-CAM_ID        = 1                   # ID camera (số nguyên)
+VIDEO_PATH    = "video/8hcam4.mkv"   # đường dẫn đến file video
+CAM_ID        = 4                   # ID camera (số nguyên)
 OUTPUT_DIR    = "crops"             # thư mục gốc lưu kết quả
 RESET_CAM     = False               # True  = xóa sạch crops/cam{C}/ rồi chạy lại từ đầu
                                     # False = đánh số track NỐI TIẾP dữ liệu cũ (tích lũy)
 SAVE_EVERY    = 8                   # lưu 1 crop mỗi N frame
 MIN_HEIGHT    = 80                  # chiều cao upbody tối thiểu (pixel)
-MAX_PER_TRACK = 25                  # số ảnh tối đa mỗi tracklet
-MIN_GAP       = 24                  # cách nhau tối thiểu N frame giữa 2 ảnh CÙNG track
-                                    # (chống ảnh trùng lặp khi người đứng yên)
+MAX_PER_TRACK = 40                  # số ảnh tối đa mỗi tracklet (video dài: rải nhiều hơn)
+MIN_GAP       = 50                  # cách nhau tối thiểu N frame giữa 2 ảnh CÙNG track
+                                    # (~2s @25fps — chống trùng + rải mẫu theo thời gian)
 ZONE_POINTS   = []                  # polygon [[x,y],...] tọa độ pixel gốc — [] = không lọc
 # =================================================================
 
@@ -29,6 +29,32 @@ import supervision as sv
 
 from head_detect import detect_heads
 from scale_box import scale_box_down
+
+
+def _real_frame_count(cap, reported: int) -> int:
+    """Số frame THẬT của video (đưa con trỏ về 0 sau khi xong).
+
+    Một số file .mkv báo FRAME_COUNT sai — phóng đại nhiều lần. Nếu frame gần
+    cuối (theo metadata) KHÔNG đọc được → binary-search tìm frame cuối đọc được
+    thật, để thanh tiến trình hiển thị đúng. (Vòng crop vẫn đọc tới hết video
+    bất kể số này, nên sai số chỉ ảnh hưởng hiển thị.)
+    """
+    if reported <= 0:
+        return 0
+    cap.set(cv2.CAP_PROP_POS_FRAMES, max(0, reported - 2))
+    ok, _ = cap.read()
+    if ok:                                    # count đáng tin (vd .mp4)
+        cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        return reported
+    lo, hi = 0, reported                      # count phóng đại → tìm cuối thật
+    while lo < hi:
+        mid = (lo + hi + 1) // 2
+        cap.set(cv2.CAP_PROP_POS_FRAMES, mid)
+        ok, _ = cap.read()
+        if ok: lo = mid
+        else:  hi = mid - 1
+    cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+    return lo + 1
 
 
 def main():
@@ -73,10 +99,12 @@ def main():
         print(f"[LỖI] Không mở được video: {VIDEO_PATH}")
         sys.exit(1)
 
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    reported_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    total_frames = _real_frame_count(cap, reported_frames)
     fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
+    note = "" if total_frames == reported_frames else f"  (metadata báo {reported_frames}, đã chỉnh)"
     print(f"Video     : {VIDEO_PATH}")
-    print(f"Frames    : {total_frames}  |  FPS: {fps:.1f}  |  Camera ID: {CAM_ID}")
+    print(f"Frames    : {total_frames}{note}  |  FPS: {fps:.1f}  |  Camera ID: {CAM_ID}")
     print(f"Lưu mỗi   : {SAVE_EVERY} frame  |  Min height: {MIN_HEIGHT}px  |  "
           f"Max/track: {MAX_PER_TRACK}  |  Min gap: {MIN_GAP}")
 

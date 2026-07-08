@@ -114,8 +114,12 @@
   .workspace{flex:1;display:flex;min-height:0}
   .canvas{flex:1;overflow:auto;padding:20px;display:flex;flex-direction:column;align-items:center;gap:14px}
   .montage-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-               padding:8px;box-shadow:var(--shadow-sm);position:relative}
-  .montage-box.ok{border-color:var(--ok);box-shadow:0 0 0 1px var(--ok),var(--shadow-sm)}
+               padding:8px;box-shadow:var(--shadow-sm);position:relative;
+               transition:transform var(--t),box-shadow var(--t),border-color var(--t)}
+  /* Track đã gán ID: viền xanh đậm + quầng sáng xanh + to lên cho dễ nhận */
+  .montage-box.ok{border:3px solid var(--ok);
+                  box-shadow:0 0 0 4px var(--ok-weak),0 0 26px 4px rgba(26,157,84,.55),var(--shadow);
+                  transform:scale(1.025)}
   .montage-box img{max-width:100%;max-height:46vh;display:block;border-radius:7px}
   .montage-box .ph{width:440px;max-width:72vw;height:280px;display:flex;align-items:center;justify-content:center;color:var(--faint)}
   .track-meta{text-align:center;color:var(--dim);font-size:13px}
@@ -135,10 +139,17 @@
 
   /* Right rail */
   .rail{width:300px;border-left:1px solid var(--border);background:var(--surface);
-        display:flex;flex-direction:column;min-height:0;flex-shrink:0}
+        display:flex;flex-direction:column;min-height:0;flex-shrink:0;position:relative}
+  /* Thanh kéo to/nhỏ cột ID (ở mép trái rail) */
+  .rail-resizer{position:absolute;left:-4px;top:0;bottom:0;width:9px;cursor:col-resize;z-index:6;
+                background:transparent;transition:background var(--t)}
+  .rail-resizer::after{content:"";position:absolute;left:3px;top:0;bottom:0;width:3px;border-radius:2px;
+                background:transparent;transition:background var(--t)}
+  .rail-resizer:hover::after,.rail-resizer.drag::after{background:var(--accent)}
+  body.rail-resizing{cursor:col-resize;user-select:none}
   .rail-head{padding:12px 14px 8px}
   .rail-head .sub{font-size:11.5px;color:var(--dim);margin-top:3px;line-height:1.5}
-  .id-strip{overflow-y:auto;padding:10px 12px 12px;display:grid;grid-template-columns:1fr 1fr;gap:9px;align-content:start;grid-auto-rows:max-content}
+  .id-strip{overflow-y:auto;padding:10px 12px 12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:9px;align-content:start;grid-auto-rows:max-content}
   .id-strip .sub{grid-column:1/-1;font-size:12px;color:var(--dim);line-height:1.6}
   #idStrip{flex:1}
   .dssearch{width:100%;margin-top:7px;padding:6px 10px;font-size:12.5px}
@@ -152,6 +163,18 @@
   .id-strip .id-card img{height:172px;object-fit:contain}
   .id-card .lbl{text-align:center;font-weight:750;color:var(--accent);font-size:15px;padding:7px 4px 9px;
                 border-top:1px solid var(--border);background:var(--accent-weak);letter-spacing:.01em}
+  /* Chọn nhiều ID để xóa hàng loạt */
+  .id-card .id-chk{position:absolute;top:5px;right:5px;width:22px;height:22px;border-radius:50%;
+                   background:rgba(255,255,255,.9);border:1.5px solid var(--border-2);display:flex;
+                   align-items:center;justify-content:center;font-size:14px;color:transparent;line-height:1;
+                   cursor:pointer;z-index:2}
+  .id-card .id-chk:hover{border-color:var(--accent)}
+  .id-card.idsel{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-weak)}
+  .id-card.idsel .id-chk{background:var(--accent);border-color:var(--accent);color:#fff}
+  .ds-bulkbar{position:sticky;top:-16px;z-index:3;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+              background:var(--accent-weak);border:1px solid var(--accent);border-radius:8px;
+              padding:8px 12px;margin:-4px 0 10px;font-size:13px;font-weight:560;color:var(--accent)}
+  .ds-bulkbar button{padding:5px 11px;font-size:12.5px}
 
   /* Bottom action bar */
   .commitslot:empty{display:none}
@@ -161,22 +184,95 @@
              border-top:1px solid var(--border);flex-wrap:wrap;flex-shrink:0}
   .actionbar input{width:84px;font-size:19px;font-weight:700;text-align:center;color:var(--accent);padding:7px}
   .actionhint{font-size:11.5px;color:var(--dim);margin-left:auto;max-width:280px;line-height:1.5}
+  /* ── Strip "số ID bị bỏ trống" (đã xóa lúc lọc) → bấm để điền lại ── */
+  .freepids{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:7px 18px;
+            background:var(--warn-weak);border-top:1px solid var(--border);
+            max-height:88px;overflow-y:auto;flex-shrink:0}
+  .freepids .fp-label{font-size:11.5px;color:var(--warn);font-weight:600;margin-right:2px}
+  .fp-chip{font-size:13px;font-weight:700;color:var(--warn);background:var(--surface);
+           border:1px solid var(--border-2);border-radius:99px;padding:3px 11px;cursor:pointer;line-height:1.35}
+  .fp-chip:hover{background:var(--warn);color:#fff;border-color:var(--warn)}
   kbd{background:var(--card);border:1px solid var(--border-2);border-bottom-width:2px;border-radius:5px;
       padding:0 5px;font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--dim)}
 
   /* ── Review theo ID ── */
   .rev-bar{display:flex;align-items:center;gap:10px;padding:11px 18px;background:var(--surface);
            border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+  .rev-stats{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:9px 18px;background:var(--surface-2);
+             border-bottom:1px solid var(--border);font-size:12.5px;color:var(--dim);flex-shrink:0}
+  .rev-stats b{color:var(--text)}
+  .rev-stat{padding:3px 11px;border-radius:99px;background:var(--card);font-weight:650;color:var(--dim);
+            cursor:pointer;border:1.5px solid transparent;transition:filter var(--t),box-shadow var(--t)}
+  .rev-stat:hover{filter:brightness(.97)}
+  .rev-stat.ok{background:var(--ok-weak);color:var(--ok)}
+  .rev-stat.warn{background:var(--warn-weak);color:var(--warn)}
+  .rev-stat.active{border-color:currentColor;box-shadow:0 0 0 2px var(--accent-weak)}
   .rev-scroll{flex:1;overflow:auto;padding:18px}
   .rev-body{display:flex;flex-direction:column;gap:14px;max-width:1100px;margin:0 auto}
   .rev-group{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
              padding:14px;box-shadow:var(--shadow-sm)}
   .rev-group.neg{background:var(--surface-2)}
-  .rev-id{font-weight:650;color:var(--accent);margin-bottom:10px;font-size:14px}
+  .rev-id{font-weight:650;color:var(--accent);margin-bottom:10px;font-size:14px;
+          display:flex;align-items:center;gap:10px}
   .rev-group.neg .rev-id{color:var(--dim)}
+  .rev-del-person{margin-left:auto;padding:5px 11px;font-size:12px;font-weight:600;border:1px solid var(--bad);
+                  background:var(--bad-weak);color:var(--bad);border-radius:7px;cursor:pointer;box-shadow:none;flex-shrink:0}
+  .rev-del-person:hover{background:var(--bad);color:#fff}
+  .rev-chk{display:flex;align-items:center;gap:8px;cursor:pointer}
+  .rev-chk input{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
+
+  /* ── Gán hàng loạt (lưới track) ── */
+  .grid-bar{display:flex;align-items:center;gap:9px;padding:11px 18px;background:var(--surface);
+            border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+  .grid-wrap{flex:1;overflow:auto;padding:16px 18px;display:grid;gap:12px;user-select:none;
+             grid-template-columns:repeat(auto-fill,minmax(150px,1fr));align-content:start;grid-auto-rows:max-content}
+  .grid-track{position:relative;border:2px solid var(--border-2);border-radius:10px;overflow:hidden;cursor:pointer;
+              background:var(--surface);transition:border-color var(--t),transform var(--t),box-shadow var(--t);user-select:none}
+  .grid-track:hover{transform:translateY(-2px);border-color:var(--accent)}
+  .grid-track img{width:100%;height:200px;object-fit:contain;display:block;background:var(--surface-2);pointer-events:none}
+  .grid-track.sel{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-weak)}
+  .grid-track .gt-check{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;
+              background:rgba(255,255,255,.88);border:1.5px solid var(--border-2);display:flex;align-items:center;
+              justify-content:center;font-size:14px;color:transparent;line-height:1}
+  .grid-track.sel .gt-check{background:var(--accent);border-color:var(--accent);color:#fff}
+  .gt-id{position:absolute;top:6px;left:6px;font-size:11px;font-weight:700;padding:2px 9px;border-radius:99px}
+  .gt-id.ok{background:var(--accent);color:#fff}
+  .gt-id.skip{background:var(--bad);color:#fff}
+  .gt-id.unseen{background:rgba(20,24,33,.72);color:#fff}
+  .gt-meta{display:block;text-align:center;font-size:11.5px;color:var(--dim);padding:5px 4px 7px;
+           border-top:1px solid var(--border);background:var(--surface-2)}
+  /* Ngăn kéo "ID đã gán" ở màn Gán hàng loạt — ấn tab để trượt ra / ẩn vào */
+  .grid-body{flex:1;display:flex;min-height:0;position:relative;overflow:hidden}
+  .grid-body .grid-wrap{flex:1}
+  .grid-rail{width:252px;flex-shrink:0;border-left:1px solid var(--border);background:var(--surface);
+             display:flex;flex-direction:column;min-height:0;position:relative;transition:margin-right var(--t)}
+  .grid-rail .id-strip{flex:1;grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}
+  /* Kéo mép trái ngăn kéo để to/nhỏ (nằm trong rail nên KHÔNG đè lên tab thò ra ngoài) */
+  .grid-rail-resizer{position:absolute;left:0;top:0;bottom:0;width:7px;cursor:col-resize;z-index:5;background:transparent}
+  .grid-rail-resizer::after{content:"";position:absolute;left:2px;top:0;bottom:0;width:3px;border-radius:2px;
+                            background:transparent;transition:background var(--t)}
+  .grid-rail-resizer:hover::after,.grid-rail-resizer.drag::after{background:var(--accent)}
+  .grid-rail-tab{position:absolute;left:-23px;top:50%;transform:translateY(-50%);width:23px;height:76px;
+                 display:flex;align-items:center;justify-content:center;background:var(--surface);
+                 border:1px solid var(--border);border-right:none;border-radius:8px 0 0 8px;
+                 box-shadow:var(--shadow-sm);cursor:pointer;font-size:13px;color:var(--dim);z-index:6;
+                 transition:background var(--t),color var(--t)}
+  .grid-rail-tab:hover{background:var(--accent-weak);color:var(--accent)}
   .rev-tracks{display:flex;flex-wrap:wrap;gap:11px}
-  .rev-track{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px;flex:0 0 150px;width:150px}
+  .rev-track{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
+             padding:7px;flex:0 0 150px;width:150px;transition:border-color var(--t),box-shadow var(--t)}
   .rev-track img{width:100%;height:120px;object-fit:cover;object-position:top center;border-radius:6px;cursor:zoom-in;display:block}
+  /* Chọn nhiều track (trong màn Xem lại theo ID) để đổi ID / xóa hàng loạt */
+  .rev-track .rt-check{position:absolute;top:11px;left:11px;width:22px;height:22px;border-radius:50%;
+                       background:rgba(255,255,255,.9);border:1.5px solid var(--border-2);display:flex;
+                       align-items:center;justify-content:center;font-size:14px;color:transparent;line-height:1;cursor:pointer;z-index:2}
+  .rev-track .rt-check:hover{border-color:var(--accent)}
+  .rev-track.tsel{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-weak)}
+  .rev-track.tsel .rt-check{background:var(--accent);border-color:var(--accent);color:#fff}
+  .rev-trackbar{position:sticky;top:0;z-index:4;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+                background:var(--accent-weak);border:1px solid var(--accent);border-radius:8px;padding:8px 12px;
+                font-size:13px;font-weight:560;color:var(--accent)}
+  .rev-trackbar button{padding:5px 11px;font-size:12.5px}
   .rev-meta{font-size:11.5px;color:var(--dim);margin:5px 0}
   .rev-edit{display:flex;gap:5px}
   .rev-input{width:46px;text-align:center;color:var(--accent);font-weight:650;padding:4px}
@@ -211,6 +307,8 @@
                  display:flex;flex-direction:column;box-shadow:var(--shadow);overflow:hidden}
   .dsmodal-head{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap}
   .dsmodal-head b{font-size:15px}
+  .ds-srctoggle{display:flex;gap:4px}
+  .ds-srctoggle button{padding:6px 12px;font-size:13px}
   .dsmodal-body{flex:1;overflow:auto;padding:16px 18px}
   .ds-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,148px);justify-content:start;align-content:start;grid-auto-rows:max-content}
   .ds-grid .id-card{cursor:pointer}
@@ -248,12 +346,34 @@
   .dscell.sel{border-color:var(--accent)}
   .dscell.sel .chk{background:var(--accent);border-color:var(--accent);color:#fff}
 
+  /* ── Bộ chọn folder QR ── */
+  .qrpick{position:fixed;inset:0;background:rgba(20,24,33,.55);backdrop-filter:blur(2px);z-index:52;
+          display:flex;align-items:center;justify-content:center;padding:22px}
+  .qrpick-card{background:var(--surface);border-radius:var(--radius);width:min(440px,94vw);max-height:84vh;
+               display:flex;flex-direction:column;gap:12px;padding:18px;box-shadow:var(--shadow);overflow:auto}
+  .qrpick-card b{font-size:15px}
+  .qrpick-list{display:flex;flex-direction:column;gap:7px}
+  .qrpick-list .qrf{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border-2);
+                    border-radius:var(--radius-sm);cursor:pointer;background:var(--surface);text-align:left;
+                    width:100%;font-weight:560;box-shadow:none}
+  .qrpick-list .qrf:hover{border-color:var(--accent);background:var(--accent-weak)}
+  .qrpick-list .qrf .cnt{margin-left:auto;color:var(--dim);font-size:12px;font-weight:500}
+  .qrpick-new{display:flex;gap:8px}
+  .qrpick-new input{flex:1;padding:8px 10px}
+
   /* ── Toast ── */
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--text);
          color:#fff;padding:11px 20px;border-radius:99px;opacity:0;transition:opacity var(--t),transform var(--t);
          pointer-events:none;box-shadow:var(--shadow);font-weight:560;font-size:13.5px}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   .toast.err{background:var(--bad)}
+
+  /* Modal thanh tiến trình khi gộp vào dataset */
+  .commit-modal{position:fixed;inset:0;background:rgba(20,24,33,.55);backdrop-filter:blur(2px);z-index:49;
+               display:flex;align-items:center;justify-content:center;padding:24px}
+  .commit-card{background:var(--surface);border-radius:var(--radius);width:min(460px,94vw);padding:20px;
+               box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px}
+  .commit-card b{font-size:15px}
 
   /* ── Zone editor ── */
   .zone-modal{position:fixed;inset:0;background:rgba(10,14,20,.72);backdrop-filter:blur(3px);z-index:55;
@@ -284,7 +404,7 @@
 <body>
 
 <header>
-  <div class="brand"><span class="dot"></span> Re-ID Pipeline <span style="font-size:10px;color:var(--faint);font-weight:500">v6</span></div>
+  <div class="brand"><span class="dot"></span> Re-ID Pipeline <span style="font-size:10px;color:var(--faint);font-weight:500">v25</span></div>
   <div class="steps" id="steps">
     <span class="step" data-s="idle"><span class="n">1</span> Video</span>
     <span class="step" data-s="processing"><span class="n">2</span> Crop + montage</span>
@@ -328,12 +448,29 @@
   <div class="dsmodal-panel">
     <div class="dsmodal-head">
       <b id="dsTitle">Dataset myreid</b>
+      <span class="ds-srctoggle" id="dsSrcToggle"></span>
       <input id="dsSearch" class="dssearch" placeholder="Tìm ID…" style="width:160px;margin:0">
       <div class="camfilter" id="dsFilters"></div>
       <span class="muted" id="dsCount" style="font-size:12px"></span>
+      <button id="dsImportBtn" style="display:none" title="Import 1 folder (bounding_box_train hoặc Market root) làm dataset phụ">📁 Import</button>
+      <button class="green" id="dsMergeBtn" style="display:none" title="Gộp toàn bộ dataset phụ vào myreid (cấp ID mới)">⤵ Gộp phụ → chính</button>
       <button id="dsClose" style="margin-left:auto">Đóng · Esc</button>
     </div>
     <div class="dsmodal-body" id="dsBody"></div>
+  </div>
+</div>
+
+<!-- Bộ chọn folder QR: SAO CHÉP ảnh đã chọn trong dataset vào 1 folder (vd để gắn mã QR) -->
+<div class="qrpick" id="qrPick" style="display:none">
+  <div class="qrpick-card">
+    <b>Đưa <span id="qrPickN">0</span> ảnh vào folder QR</b>
+    <div class="muted" style="font-size:12px;line-height:1.5">Ảnh được <b>sao chép</b> (vẫn giữ trong dataset). Chọn folder có sẵn hoặc gõ tên để tạo mới.</div>
+    <div class="qrpick-list" id="qrPickList"></div>
+    <div class="qrpick-new">
+      <input id="qrPickName" placeholder="Tên folder mới…" maxlength="80" autocomplete="off">
+      <button class="primary" id="qrPickCreate">Tạo &amp; đưa vào</button>
+    </div>
+    <button id="qrPickClose">Đóng · Esc</button>
   </div>
 </div>
 
@@ -365,20 +502,55 @@
   </div>
 </div>
 
+<!-- Modal: Nạp thêm video vào đợt đang làm (Hướng C — gom nhiều đợt rồi mới gộp) -->
+<div id="addMoreModal" style="display:none;position:fixed;inset:0;background:rgba(20,24,33,.55);backdrop-filter:blur(2px);z-index:47;align-items:center;justify-content:center;padding:24px">
+  <div style="background:var(--surface);border-radius:var(--radius);width:min(640px,95vw);max-height:88vh;display:flex;flex-direction:column;box-shadow:var(--shadow);overflow:hidden">
+    <div style="display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid var(--border)">
+      <b style="font-size:15px">➕ Nạp thêm video vào đợt này</b>
+      <button id="amRescan" style="margin-left:auto">Quét lại</button>
+      <button id="amClose">&#10005; Đóng</button>
+    </div>
+    <div style="padding:14px 18px;overflow:auto" id="amBody"></div>
+    <div style="padding:12px 18px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px">
+      <span class="muted" style="font-size:11.5px;flex:1">Crop sẽ <b>cộng dồn</b> vào đợt đang làm (track nối tiếp, ID đã gán giữ nguyên). Video crop xong sẽ bị xóa khỏi <code>video/</code>. Khi đa số khách đủ 3 cam mới bấm Gộp.</span>
+      <button class="primary" id="amStart">Crop thêm vào đợt này</button>
+    </div>
+  </div>
+</div>
+
+<!-- Thanh tiến trình khi gộp vào dataset (copy ảnh có thể vài phút với batch to) -->
+<div class="commit-modal" id="commitModal" style="display:none">
+  <div class="commit-card">
+    <b>⤵ Đang gộp vào dataset</b>
+    <div class="barbg"><div id="commitFill"></div></div>
+    <div id="commitMsg" class="muted" style="font-size:13px;line-height:1.5"></div>
+    <div class="muted" style="font-size:11.5px">Copy ảnh vào myReIDNew rồi dọn dữ liệu tạm. Đừng tắt tới khi xong.</div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-console.log("Re-ID UI build: zone-editor-fix-v6 (frame video hiện đúng trong trình vẽ zone)");
+console.log("Re-ID UI build: commit-progress-v25 (gộp dataset chạy nền + thanh tiến trình X/Y ảnh)");
 const $ = id => document.getElementById(id);
 let STATE = null, DATA = null;
-let TRACKS = [], camFilter = "all", view = [], cur = 0, lastPid = null, NEXT_PID = 0, DS_PIDS = [];
+let TRACKS = [], camFilter = "all", view = [], cur = 0, lastPid = null, NEXT_PID = 0, DS_PIDS = [], FREE_PIDS = [];
 let reviewMode = false;
+let revSel = new Set();   // các pid đang được tick để xóa hàng loạt (màn Xem lại theo ID)
+let revTrackSel = new Set();  // các track_dir đang được tick để đổi ID / xóa hàng loạt (màn Xem lại theo ID)
+let covFilter = "all";    // lọc ID theo số camera xuất hiện: "all" | 1 | 2 | 3 (màn review)
+let gridMode = false;
+let gridSel = new Set();  // track_dir đang được chọn ở chế độ Gán hàng loạt (lưới)
+let gridRailOpen = localStorage.getItem("reid_gridRailOpen") === "1";  // ngăn kéo "ID đã gán" màn lưới — MẶC ĐỊNH ẨN, nhớ lựa chọn
+let gridRailW = parseInt(localStorage.getItem("reid_gridRailW")) || 252;  // bề rộng ngăn kéo (kéo mép chỉnh được)
+let railW = parseInt(localStorage.getItem("reid_railW")) || 300;   // bề rộng cột "ID đã gán" (kéo chỉnh được)
 let pollTimer = null;
 let lastCommit = null;   // kết quả + thống kê đợt vừa gộp (hiện ở màn idle)
 
 // ── Tải trạng thái ───────────────────────────────────────────────────────────
 async function loadState(){
   const d = await (await fetch("/api/state")).json();
+  if(d.committing && !committing){ committing=true; showCommitModal(); pollCommit(); return; }  // reload giữa lúc gộp → hiện lại thanh %
   STATE = d.state; DATA = d;
   updateHeader(d);
   if(pollTimer){clearInterval(pollTimer);pollTimer=null;}
@@ -426,7 +598,7 @@ function renderIdle(d){
       ${commitStatsHTML()}
       <h2>Đưa video vào</h2>
       <div class="box">
-        <p class="muted">Bỏ các file <b>.mp4</b> vào thư mục <code>video/</code> (mỗi file là một camera), rồi bấm quét. Tùy chọn: vẽ <b>zone</b> cho từng camera để chỉ lấy người trong vùng quan tâm.</p>
+        <p class="muted">Bỏ file video (<b>.mp4 / .mkv / .mov / .avi</b>) vào thư mục <code>video/</code> (mỗi file là một camera), rồi bấm quét. Tùy chọn: vẽ <b>zone</b> cho từng camera để chỉ lấy người trong vùng quan tâm.</p>
         <div style="margin-top:12px">${rows || '<p class="muted">Chưa thấy video nào trong video/</p>'}</div>
         <div style="margin-top:16px;display:flex;gap:10px">
           <button onclick="loadState()">Quét lại</button>
@@ -508,9 +680,14 @@ $("zClearBtn").onclick=async()=>{
   await post("/api/zones", {zones: updated});
   ZONES=updated; toast("Đã xóa zone Cam "+Z_CAM);
 };
+let zSliderTimer=null;
 $("zFrameSlider").oninput=(e)=>{
-  const pos=e.target.value/100; $("zFramePct").textContent=e.target.value+"%";
-  $("zoneFrameImg").src="/frame?video="+encodeURIComponent(Z_VID)+"&pos="+pos;
+  const val=e.target.value;
+  $("zFramePct").textContent=val+"%";          // cập nhật nhãn ngay
+  clearTimeout(zSliderTimer);                   // chỉ tải frame khi ngừng kéo ~250ms
+  zSliderTimer=setTimeout(()=>{
+    $("zoneFrameImg").src="/frame?video="+encodeURIComponent(Z_VID)+"&pos="+(val/100);
+  }, 250);
 };
 
 // ── 2. PROCESSING ────────────────────────────────────────────────────────────
@@ -558,8 +735,9 @@ function renderMontagePending(){
 
 // ── 3. LABEL ─────────────────────────────────────────────────────────────────
 function renderLabel(d){
-  TRACKS = d.tracks||[]; NEXT_PID = d.next_pid||0; DS_PIDS = d.ds_pids||[];
+  TRACKS = d.tracks||[]; NEXT_PID = d.next_pid||0; DS_PIDS = d.ds_pids||[]; FREE_PIDS = d.free_pids||[];
   if(reviewMode){ renderReview(); return; }
+  if(gridMode){ renderGrid(d); return; }
   const cams = d.cameras||[];
   if(camFilter!=="all" && !cams.includes(camFilter)) camFilter = "all";
   const camBtns = ['<button class="'+(camFilter==="all"?"primary":"")+'" onclick="setCam(\'all\')">Tất cả</button>']
@@ -568,12 +746,16 @@ function renderLabel(d){
   $("view").innerHTML = `
     <div class="labelbar">
       <button class="ghost" onclick="openGallery()">👥 Người đã có (${DS_PIDS.length})</button>
+      <button class="ghost" onclick="openAddMore()" title="Nạp thêm video 5 phút vào đợt đang làm rồi crop tiếp — gán dồn, chưa gộp dataset">➕ Nạp thêm video</button>
+      <button class="ghost" onclick="suggestIds()" title="Tự động gợi ý ID cho mọi track bằng transreid_reid.onnx (gom cụm cùng người). GHI ĐÈ ID hiện tại.">🤖 Gợi ý ID</button>
       <div class="camfilter">${camBtns}</div>
       <div class="navcluster">
         <button id="bPrev" class="iconbtn">◀</button>
         <div id="pos" class="pos"></div>
         <button id="bNext" class="iconbtn">▶</button>
+        <button id="bUnseen" class="ghost" title="Nhảy tới track CHƯA GÁN kế tiếp (phím U)">⏭ Chưa gán</button>
       </div>
+      <button class="ghost" onclick="toggleGrid()" title="Xem tất cả track dạng lưới, chọn nhiều rồi gán/bỏ qua một lượt">🔲 Gán hàng loạt</button>
       <button class="ghost" onclick="toggleReview()">Xem lại theo ID</button>
     </div>
     <div class="workspace">
@@ -582,51 +764,322 @@ function renderLabel(d){
         <div id="info" class="track-meta"></div>
         <div class="imgstrip" id="trackImgs"></div>
       </div>
-      <aside class="rail rail-right">
+      <aside class="rail rail-right" id="rail" style="width:${railW}px">
+        <div class="rail-resizer" id="railResizer" title="Kéo để chỉnh rộng cột ID"></div>
         <div class="rail-head">
           <h3>ID đã gán (đợt này)</h3>
-          <div class="sub">Số ID hiện ngay dưới mỗi ảnh. Cùng người nhiều camera → bấm lại thẻ ID đó.</div>
+          <div class="sub">Số ID hiện ngay dưới mỗi ảnh. Cùng người nhiều camera → bấm lại thẻ ID đó. <span class="muted">Kéo mép trái để to/nhỏ.</span></div>
         </div>
         <div class="id-strip" id="idStrip"></div>
       </aside>
     </div>
     <div id="commitBar" class="commitslot"></div>
+    <div id="freeBar" class="freepids" style="display:none"></div>
     <div class="actionbar">
       <input id="pidIn" inputmode="numeric" placeholder="ID" autocomplete="off">
       <button class="primary" id="bAssign">Gán <kbd>Enter</kbd></button>
       <button id="bSame">Như track trước <kbd>Space</kbd></button>
       <button class="warn" id="bSkip">Bỏ qua <kbd>S</kbd></button>
       <button class="red" id="bDel">Xóa track <kbd>Del</kbd></button>
-      <div class="actionhint">Mỗi người một ID mới (web gợi ý số kế tiếp). <kbd>←</kbd><kbd>→</kbd> di chuyển track.</div>
+      <div class="actionhint">Mỗi người một ID mới (gợi ý số kế tiếp). Số bị bỏ trống hiện ở thanh vàng để tái dùng. <kbd>←</kbd><kbd>→</kbd> di chuyển · <kbd>U</kbd> tới track chưa gán.</div>
     </div>`;
 
   $("bPrev").onclick=prev; $("bNext").onclick=next;
   $("bAssign").onclick=assignFromInput; $("bSame").onclick=assignSame;
   $("bSkip").onclick=skip; $("bDel").onclick=delTrack;
-  rebuildView(); renderTrack(); renderStrip(d);
+  $("bUnseen").onclick=jumpNextUnseen;
+  setupRailResizer();
+  rebuildView();
+  // Tự nhảy tới track CHƯA GÁN đầu tiên (sau khi nạp thêm video / đổi camera)
+  const fu=firstUnseenIdx(); if(fu>=0) cur=fu;
+  renderTrack(); renderStrip(d);
   updateCommitBar(d.stats);
 }
 
-function setCam(c){ camFilter=c; cur=0; renderLabel(DATA); }
+// Kéo mép trái cột "ID đã gán" để to/nhỏ (nhớ vào localStorage)
+function setupRailResizer(){
+  const h=$("railResizer"), rail=$("rail");
+  if(!h||!rail) return;
+  h.onpointerdown=(e)=>{
+    e.preventDefault();
+    const startX=e.clientX, startW=rail.offsetWidth;
+    h.classList.add("drag"); document.body.classList.add("rail-resizing");
+    const move=(ev)=>{
+      let w=startW-(ev.clientX-startX);          // kéo sang TRÁI = rộng ra
+      w=Math.max(220, Math.min(760, Math.round(w)));
+      railW=w; rail.style.width=w+"px";
+    };
+    const up=()=>{
+      h.classList.remove("drag"); document.body.classList.remove("rail-resizing");
+      localStorage.setItem("reid_railW", railW);
+      window.removeEventListener("pointermove",move);
+      window.removeEventListener("pointerup",up);
+    };
+    window.addEventListener("pointermove",move);
+    window.addEventListener("pointerup",up);
+  };
+}
+
+// Vị trí (trong view) của track chưa gán đầu tiên; -1 nếu không còn
+function firstUnseenIdx(){
+  for(let i=0;i<view.length;i++){ if(TRACKS[view[i]].global_pid===-2) return i; }
+  return -1;
+}
+// Nhảy tới track chưa gán KẾ TIẾP tính từ vị trí hiện tại (vòng lại đầu)
+function jumpNextUnseen(){
+  if(!view.length) return;
+  for(let k=1;k<=view.length;k++){
+    const i=(cur+k)%view.length;
+    if(TRACKS[view[i]].global_pid===-2){ cur=i; renderTrack(); return; }
+  }
+  toast("Đã gán hết — không còn track chưa gán");
+}
+
+function setCam(c){ camFilter=c; cur=0; revTrackSel.clear(); renderLabel(DATA); }
+
+// 🤖 Auto gợi ý ID bằng transreid_reid.onnx (chạy nền, hiện màn xử lý + log)
+async function suggestIds(){
+  if(!confirm("Tự động gợi ý ID cho MỌI track bằng transreid_reid.onnx?\n"+
+              "• Gom các track cùng người thành 1 ID (kể cả khác camera).\n"+
+              "• GHI ĐÈ toàn bộ ID hiện tại bằng gợi ý.\n"+
+              "Nên chạy ngay sau crop (trước khi gán tay).")) return;
+  const r = await post("/api/suggest_ids", {});
+  if(r && r.ok){ toast("Đang gợi ý ID… (xem log)"); loadState(); }   // → màn xử lý, xong tự về gán
+  else if(r) toast(r.error||"Không chạy được", true);
+}
 
 // ── Xem lại theo ID ──────────────────────────────────────────────────────────
-function toggleReview(){ reviewMode=!reviewMode; renderLabel(DATA); }
+function toggleReview(){ reviewMode=!reviewMode; revSel.clear(); revTrackSel.clear(); covFilter="all"; renderLabel(DATA); }
+function setCov(v){ covFilter=v; revSel.clear(); revTrackSel.clear(); renderReview(); }
+
+// ── Gán hàng loạt (lưới track) ───────────────────────────────────────────────
+function toggleGrid(){ gridMode=!gridMode; gridSel.clear(); renderLabel(DATA); }
+function gridSetCam(c){ camFilter=c; renderGrid(DATA); }
+function gridUpdateN(){ const n=$("gridSelN"); if(n) n.textContent=gridSel.size; }
+
+function renderGrid(d){
+  const cams=d.cameras||[];
+  if(camFilter!=="all" && !cams.includes(camFilter)) camFilter="all";
+  const camBtns=['<button class="'+(camFilter==="all"?"primary":"")+'" onclick="gridSetCam(\'all\')">Tất cả</button>']
+    .concat(cams.map(c=>`<button class="${camFilter===c?"primary":""}" onclick="gridSetCam(${c})">Cam ${c}</button>`)).join(" ");
+  const shown=TRACKS.filter(t=>camFilter==="all"||t.cam===camFilter);
+  let cards="";
+  shown.forEach(t=>{
+    const enc=encodeURIComponent(t.track_dir);
+    const src=(t.montage?"/montage":"/crop")+"?track_dir="+enc;
+    const badge = t.global_pid>=0 ? `<span class="gt-id ok">ID ${t.global_pid}</span>`
+              : (t.global_pid===-1 ? `<span class="gt-id skip">bỏ qua</span>`
+              : `<span class="gt-id unseen">chưa gán</span>`);
+    cards+=`<div class="grid-track${gridSel.has(t.track_dir)?' sel':''}" data-td="${t.track_dir}">
+        <img loading="lazy" src="${src}">
+        <span class="gt-check">✓</span>${badge}
+        <span class="gt-meta">cam ${t.cam} · ${t.num_images} ảnh</span>
+      </div>`;
+  });
+  const unseenN=shown.filter(t=>t.global_pid===-2).length;
+  $("view").innerHTML=`
+    <div class="grid-bar">
+      <button id="gridBack">← Quay lại gán từng track</button>
+      <b>Gán hàng loạt</b>
+      <div class="camfilter">${camBtns}</div>
+      <span class="muted" style="font-size:12px">${shown.length} track · ${unseenN} chưa gán</span>
+      <button id="gridSelUnseen" class="ghost">Chọn chưa gán</button>
+      <button id="gridSelAll" class="ghost">Chọn tất cả</button>
+      <button id="gridSelNone" class="ghost">Bỏ chọn</button>
+      <span style="margin-left:auto;display:flex;align-items:center;gap:8px">
+        <input id="gridPid" inputmode="numeric" placeholder="ID"
+               style="width:74px;font-size:16px;font-weight:700;text-align:center;color:var(--accent);padding:6px">
+        <button class="primary" id="gridAssign">Gán cho <b id="gridSelN">0</b> track</button>
+        <button class="warn" id="gridSkip">Bỏ qua</button>
+        <button class="red" id="gridDel">Xóa</button>
+      </span>
+    </div>
+    <div id="gridFreeBar" class="freepids" style="display:none"></div>
+    <div class="grid-body">
+      <div class="grid-wrap" id="gridWrap">${cards||'<p class="muted" style="padding:24px">Không có track ở bộ lọc này</p>'}</div>
+      <aside class="grid-rail" id="gridRail" style="width:${gridRailW}px;margin-right:${gridRailOpen?0:-gridRailW}px">
+        <div class="grid-rail-resizer" id="gridRailResizer" title="Kéo để chỉnh rộng cột ID"></div>
+        <div class="grid-rail-tab" id="gridRailTab" title="Ẩn/hiện cột ID đã gán">▶</div>
+        <div class="rail-head">
+          <h3>ID đã gán (đợt này)</h3>
+          <div class="sub">Bấm ảnh để xem to &amp; đối chiếu người. Bấm thẻ để điền số vào ô gán. <span class="muted">Ấn tab ở mép để ẩn/hiện.</span></div>
+        </div>
+        <div class="id-strip" id="gridIdStrip"></div>
+      </aside>
+    </div>`;
+  $("gridBack").onclick=toggleGrid;
+  $("gridSelAll").onclick=()=>{ shown.forEach(t=>gridSel.add(t.track_dir)); renderGrid(DATA); };
+  $("gridSelUnseen").onclick=()=>{ shown.filter(t=>t.global_pid===-2).forEach(t=>gridSel.add(t.track_dir)); renderGrid(DATA); };
+  $("gridSelNone").onclick=()=>{ gridSel.clear(); renderGrid(DATA); };
+  $("gridAssign").onclick=gridAssign;
+  $("gridSkip").onclick=()=>{ if(gridSel.size) gridApply(()=>-1); else toast("Chưa chọn track",true); };
+  $("gridDel").onclick=gridDelete;
+  $("gridPid").onkeydown=(e)=>{ if(e.key==="Enter"){ e.preventDefault(); gridAssign(); } };
+  $("gridWrap").addEventListener("pointerdown", gridDragStart);  // click + kéo-quét chọn vùng
+  $("gridRailTab").onclick=toggleGridRail;
+  setupGridRailResizer();
+  applyGridRail();
+  fillIdStrip($("gridIdStrip"));   // cột "ID đã gán" để đối chiếu khi gán hàng loạt
+  fillFreePids($("gridFreeBar"), "gridPid");   // thanh số ID bị bỏ trống để tái dùng
+  gridUpdateN();
+}
+
+// Ngăn kéo "ID đã gán" ở màn lưới: ấn tab để trượt ra / ẩn vào (nhớ vào localStorage)
+function toggleGridRail(){
+  gridRailOpen=!gridRailOpen;
+  localStorage.setItem("reid_gridRailOpen", gridRailOpen?"1":"0");
+  applyGridRail();
+}
+function applyGridRail(){
+  const rail=$("gridRail"), tab=$("gridRailTab");
+  if(!rail||!tab) return;
+  rail.style.width=gridRailW+"px";
+  rail.style.marginRight=(gridRailOpen?0:-gridRailW)+"px";   // ẩn = trượt hẳn ra ngoài theo đúng bề rộng
+  tab.textContent = gridRailOpen ? "▶" : "◀";
+  tab.title = gridRailOpen ? "Ẩn cột ID đã gán" : "Hiện cột ID đã gán";
+}
+
+// Kéo mép trái ngăn kéo để to/nhỏ (nhớ vào localStorage) — giống cột màn gán từng track
+function setupGridRailResizer(){
+  const h=$("gridRailResizer"), rail=$("gridRail");
+  if(!h||!rail) return;
+  h.onpointerdown=(e)=>{
+    e.preventDefault();
+    const startX=e.clientX, startW=rail.offsetWidth;
+    h.classList.add("drag"); document.body.classList.add("rail-resizing");
+    const move=(ev)=>{
+      let w=startW-(ev.clientX-startX);          // kéo sang TRÁI = rộng ra
+      w=Math.max(180, Math.min(640, Math.round(w)));
+      gridRailW=w; rail.style.width=w+"px";      // đang mở → margin-right giữ 0, chỉnh rộng tức thì
+    };
+    const up=()=>{
+      h.classList.remove("drag"); document.body.classList.remove("rail-resizing");
+      localStorage.setItem("reid_gridRailW", gridRailW);
+      window.removeEventListener("pointermove",move);
+      window.removeEventListener("pointerup",up);
+    };
+    window.addEventListener("pointermove",move);
+    window.addEventListener("pointerup",up);
+  };
+}
+
+// Kéo-quét chọn nhiều track theo vùng (rubber-band), cộng dồn vào lựa chọn
+let gridDrag={on:false,moved:false,sx:0,sy:0,base:null,hit:null,band:null,cell:null};
+function gridBandInit(){
+  window.addEventListener("pointermove",gridDragMove);
+  window.addEventListener("pointerup",gridDragEnd);
+  window.addEventListener("pointercancel",gridDragEnd);
+}
+function gridDragStart(e){
+  if(e.button!==0 || e.target.closest(".grid-bar")) return;
+  gridDrag.on=true; gridDrag.moved=false; gridDrag.sx=e.clientX; gridDrag.sy=e.clientY;
+  gridDrag.base=new Set(gridSel); gridDrag.hit=new Set();
+  gridDrag.cell=e.target.closest(".grid-track");
+  e.preventDefault();
+}
+function gridDragMove(e){
+  if(!gridDrag.on) return;
+  const dx=e.clientX-gridDrag.sx, dy=e.clientY-gridDrag.sy;
+  if(!gridDrag.moved && Math.hypot(dx,dy)<5) return;
+  gridDrag.moved=true;
+  if(!gridDrag.band){ gridDrag.band=document.createElement("div"); gridDrag.band.className="ds-band"; document.body.appendChild(gridDrag.band); }
+  const x=Math.min(e.clientX,gridDrag.sx), y=Math.min(e.clientY,gridDrag.sy), w=Math.abs(dx), h=Math.abs(dy);
+  Object.assign(gridDrag.band.style,{left:x+"px",top:y+"px",width:w+"px",height:h+"px"});
+  const R={l:x,t:y,r:x+w,b:y+h}, wrap=$("gridWrap");
+  if(!wrap) return;
+  gridDrag.hit=new Set();
+  wrap.querySelectorAll(".grid-track").forEach(c=>{
+    const q=c.getBoundingClientRect();
+    const inside=!(q.right<R.l||q.left>R.r||q.bottom<R.t||q.top>R.b);
+    if(inside) gridDrag.hit.add(c.dataset.td);
+    c.classList.toggle("sel", gridDrag.base.has(c.dataset.td)||inside);
+  });
+  const bb=wrap.getBoundingClientRect();
+  if(e.clientY>bb.bottom-30) wrap.scrollTop+=20;
+  else if(e.clientY<bb.top+30) wrap.scrollTop-=20;
+  const el=$("gridSelN"); if(el) el.textContent=new Set([...gridDrag.base,...gridDrag.hit]).size;
+}
+function gridDragEnd(){
+  if(!gridDrag.on) return;
+  gridDrag.on=false;
+  if(gridDrag.band){ gridDrag.band.remove(); gridDrag.band=null; }
+  if(gridDrag.moved){                                   // kéo → gộp vùng vào lựa chọn
+    gridSel=gridDrag.base; gridDrag.hit.forEach(k=>gridSel.add(k));
+    const wrap=$("gridWrap"); if(wrap) wrap.querySelectorAll(".grid-track").forEach(c=>c.classList.toggle("sel", gridSel.has(c.dataset.td)));
+    gridUpdateN();
+  } else if(gridDrag.cell){                              // click đơn → bật/tắt 1 track
+    const td=gridDrag.cell.dataset.td;
+    gridSel.has(td)?gridSel.delete(td):gridSel.add(td);
+    gridDrag.cell.classList.toggle("sel", gridSel.has(td)); gridUpdateN();
+  }
+  gridDrag.cell=null;
+}
+
+async function gridAssign(){
+  if(!gridSel.size){ toast("Chưa chọn track nào",true); return; }
+  const v=$("gridPid").value.trim();
+  if(v===""){ toast("Nhập ID rồi gán",true); return; }
+  const p=parseInt(v,10); if(isNaN(p)||p<0){ toast("ID phải ≥ 0",true); return; }
+  const batchPids=new Set(TRACKS.filter(t=>t.global_pid>=0).map(t=>t.global_pid));
+  if(DS_PIDS.includes(p)&&!batchPids.has(p)){
+    if(!confirm(`⚠️ ID ${p} đã là người cũ trong dataset. Gán sẽ gộp chung với người đó.\nVẫn gán ${p} cho ${gridSel.size} track?`)) return;
+  }
+  gridApply(()=>p);
+}
+async function gridApply(pidFn){
+  const tds=[...gridSel];
+  for(const td of tds){
+    const p=pidFn(td);
+    const t=TRACKS.find(x=>x.track_dir===td); if(t) t.global_pid=p;
+    const r = p===-1 ? await post("/api/skip",{track_dir:td})
+                     : await post("/api/label",{track_dir:td,global_pid:p});
+    if(r&&r.next_pid!=null) NEXT_PID=r.next_pid;
+    if(r&&r.free_pids) FREE_PIDS=r.free_pids;
+  }
+  gridSel.clear();
+  toast(`Đã xử lý ${tds.length} track`);
+  renderGrid(DATA);
+}
+async function gridDelete(){
+  if(!gridSel.size){ toast("Chưa chọn track nào",true); return; }
+  if(!confirm(`Xóa HẲN ${gridSel.size} track đã chọn (cả ảnh gốc)? Không thể hoàn tác.`)) return;
+  const tds=[...gridSel];
+  for(const td of tds){
+    await post("/api/delete",{track_dir:td});
+    const i=TRACKS.findIndex(x=>x.track_dir===td); if(i>=0) TRACKS.splice(i,1);
+  }
+  gridSel.clear(); toast(`Đã xóa ${tds.length} track`); renderGrid(DATA);
+}
 
 function renderReview(){
+  const _revScroll = ($("revScroll")||{}).scrollTop || 0;   // nhớ vị trí cuộn → đổi ID/xóa không nhảy lên đầu
   const groups={};
   TRACKS.forEach(t=>{ (groups[t.global_pid]=groups[t.global_pid]||[]).push(t); });
   const rank=v=> v>=0?0:(v===-1?1:2);
   const keys=Object.keys(groups).map(Number).sort((a,b)=>rank(a)-rank(b)||a-b);
+  const allCams=[...new Set(TRACKS.map(t=>t.cam))].sort((a,b)=>a-b);
+  if(camFilter!=="all" && !allCams.includes(camFilter)) camFilter="all";
+  // Bỏ khỏi lựa chọn các track đã bị xóa (không còn trong TRACKS)
+  const allTd=new Set(TRACKS.map(t=>t.track_dir));
+  [...revTrackSel].forEach(td=>{ if(!allTd.has(td)) revTrackSel.delete(td); });
 
   let body="";
   keys.forEach(pid=>{
-    const ts=groups[pid];
+    // Lọc theo SỐ CAMERA của ID (tính trên toàn bộ track của ID, không theo camFilter)
+    if(covFilter!=="all"){
+      if(pid<0) return;   // nhóm chưa xem/bỏ qua không có "số cam" → ẩn khi lọc số cam
+      const nc=new Set(groups[pid].map(t=>t.cam)).size;
+      if(covFilter===3 ? nc<3 : nc!==covFilter) return;
+    }
+    const ts = camFilter==="all" ? groups[pid] : groups[pid].filter(t=>t.cam===camFilter);
+    if(!ts.length) return;   // nhóm không có track ở camera đang lọc → ẩn
     const title = pid>=0?("ID "+pid):(pid===-1?"Đã bỏ qua":"Chưa xem");
     const tot = ts.reduce((s,t)=>s+t.num_images,0);
     let cards="";
     ts.forEach(t=>{
       const url=(t.montage?"/montage":"/crop")+"?track_dir="+encodeURIComponent(t.track_dir);
-      cards+=`<div class="rev-track">
+      cards+=`<div class="rev-track${revTrackSel.has(t.track_dir)?' tsel':''}" data-td="${t.track_dir}">
+        <span class="rt-check" title="Chọn track để đổi ID / xóa hàng loạt">✓</span>
         <img loading="lazy" class="rev-img" src="${url}" data-pid="${pid}" data-src="${url}">
         <div class="rev-meta">cam ${t.cam} · ${t.num_images} ảnh</div>
         <div class="rev-edit">
@@ -636,9 +1089,32 @@ function renderReview(){
         </div></div>`;
     });
     body+=`<div class="rev-group ${pid<0?'neg':''}">
-      <div class="rev-id">${title} · ${ts.length} track · ${tot} ảnh</div>
+      <div class="rev-id">
+        <label class="rev-chk"><input type="checkbox" class="rev-sel-cb" data-pid="${pid}" ${revSel.has(pid)?'checked':''}>
+          <span>${title} · ${ts.length} track · ${tot} ảnh</span></label>
+        <button class="rev-del-person" data-pid="${pid}" title="Xóa toàn bộ track của ${title}">🗑 Xóa cả ${pid>=0?('ID '+pid):'nhóm'}</button>
+      </div>
       <div class="rev-tracks">${cards}</div></div>`;
   });
+
+  // Thống kê coverage camera của đợt này (chỉ tính ID đã gán) — luôn theo TẤT CẢ camera
+  let nAssigned=0, c1=0, c2=0, c3=0;
+  keys.forEach(pid=>{
+    if(pid<0) return;
+    nAssigned++;
+    const nc=new Set(groups[pid].map(t=>t.cam)).size;
+    if(nc>=3) c3++; else if(nc===2) c2++; else c1++;
+  });
+  const chip=(v,cls,label,n,tip)=>`<span class="rev-stat ${cls}${covFilter===v?' active':''}" `
+      +`onclick="setCov(${typeof v==='number'?v:`'${v}'`})" title="${tip}">${label}: ${n}</span>`;
+  const statsHTML = nAssigned ? `<div class="rev-stats">
+      <b>${nAssigned} ID đã gán</b> · ${allCams.length} camera <span class="muted">· lọc theo số cam:</span>
+      <span class="rev-stat${covFilter==='all'?' active':''}" onclick="setCov('all')" title="Hiện tất cả ID">Tất cả: ${nAssigned}</span>
+      ${chip(1,'warn','1 cam',c1,'ID chỉ 1 camera — dễ camera-bias')}
+      ${chip(2,'','2 cam',c2,'ID ở 2 camera')}
+      ${chip(3,'ok','đủ 3 cam',c3,'ID đủ 3 camera — tốt nhất cho ReID')}
+      <span class="muted">· ≥2 cam (khỏe): <b style="color:var(--text)">${c2+c3}/${nAssigned}</b></span>
+    </div>` : "";
 
   const unseen=TRACKS.filter(t=>t.global_pid===-2).length;
   const completeBtn = unseen>0
@@ -649,11 +1125,40 @@ function renderReview(){
     <div class="rev-bar">
       <button id="revBack">← Quay lại gán</button>
       <b>Xem lại theo ID</b>
-      <span class="muted" style="font-size:12.5px">Soát từng người — sai thì đổi ID hoặc xóa track, xong bấm hoàn tất</span>
+      <div class="camfilter">
+        <button class="${camFilter==="all"?"primary":""}" onclick="setCam('all')">Tất cả</button>
+        ${allCams.map(c=>`<button class="${camFilter===c?"primary":""}" onclick="setCam(${c})">Cam ${c}</button>`).join("")}
+      </div>
+      <button id="revSelAll" class="ghost" style="padding:5px 11px;font-size:12.5px">Chọn tất cả</button>
+      <button id="revSelNone" class="ghost" style="padding:5px 11px;font-size:12.5px">Bỏ chọn</button>
+      <button id="revRenameSel" class="primary" style="padding:6px 12px;font-size:12.5px" disabled>✏️ Đổi/gộp ID đã chọn</button>
+      <button id="revDelSel" class="red" style="padding:6px 12px;font-size:12.5px" disabled>🗑 Xóa ID đã chọn</button>
+      <span id="revSelInfo" class="muted" style="font-size:12.5px"></span>
       <span style="margin-left:auto">${completeBtn}</span>
     </div>
-    <div class="rev-scroll"><div class="rev-body">${body||'<p class="muted">Chưa có track nào</p>'}</div></div>`;
+    ${statsHTML}
+    <div class="grid-body">
+      <div class="rev-scroll" id="revScroll"><div class="rev-body">
+      <div class="rev-trackbar" id="revTrackBar" style="display:${revTrackSel.size?'flex':'none'}">
+        <b><span id="revTrackN">${revTrackSel.size}</span> track đã chọn</b>
+        <button class="primary" id="revTrackRename">✏️ Đổi/gộp ID</button>
+        <button class="red" id="revTrackDel">🗑 Xóa track đã chọn</button>
+        <button id="revTrackNone">Bỏ chọn</button>
+        <span class="muted" style="font-size:11.5px;font-weight:400">· tick ✓ ở góc thẻ để chọn nhiều track (chọn được xuyên nhiều ID)</span>
+      </div>
+      ${body||'<p class="muted" style="padding:20px">'+((covFilter!=="all"||camFilter!=="all")?'Không có ID nào khớp bộ lọc':'Chưa có track nào')+'</p>'}</div></div>
+      <aside class="grid-rail" id="gridRail" style="width:${gridRailW}px;margin-right:${gridRailOpen?0:-gridRailW}px">
+        <div class="grid-rail-resizer" id="gridRailResizer" title="Kéo để chỉnh rộng cột ID"></div>
+        <div class="grid-rail-tab" id="gridRailTab" title="Ẩn/hiện cột ID đã gán">▶</div>
+        <div class="rail-head">
+          <h3>ID đã gán (đợt này)</h3>
+          <div class="sub">Bấm ảnh để xem to &amp; đối chiếu người. <span class="muted">Ấn tab ở mép để ẩn/hiện, kéo mép để chỉnh rộng.</span></div>
+        </div>
+        <div class="id-strip" id="gridIdStrip"></div>
+      </aside>
+    </div>`;
 
+  const _rs=$("revScroll"); if(_rs) _rs.scrollTop=_revScroll;   // khôi phục vị trí cuộn ngay khi dựng xong
   $("revBack").onclick=toggleReview;
   const rc=$("revComplete"); if(rc) rc.onclick=commit;
   document.querySelectorAll(".rev-img").forEach(im=>{
@@ -665,6 +1170,141 @@ function renderReview(){
   document.querySelectorAll(".rev-del").forEach(b=>{
     b.onclick=()=>reviewDelete(b.dataset.td, parseInt(b.dataset.n,10));
   });
+  document.querySelectorAll(".rev-del-person").forEach(b=>{
+    b.onclick=()=>reviewDeletePerson(parseInt(b.dataset.pid,10));
+  });
+  // Chọn nhiều ID để xóa hàng loạt
+  document.querySelectorAll(".rev-sel-cb").forEach(cb=>{
+    cb.onchange=()=>{ const p=parseInt(cb.dataset.pid,10);
+      cb.checked?revSel.add(p):revSel.delete(p); revUpdateSel(); };
+  });
+  // "Chọn tất cả" chỉ chọn các ID ĐANG HIỆN theo bộ lọc camera
+  const visiblePids=[...document.querySelectorAll(".rev-sel-cb")].map(cb=>parseInt(cb.dataset.pid,10));
+  $("revSelAll").onclick=()=>{ visiblePids.forEach(p=>revSel.add(p));
+    document.querySelectorAll(".rev-sel-cb").forEach(cb=>cb.checked=true); revUpdateSel(); };
+  $("revSelNone").onclick=()=>{ revSel.clear();
+    document.querySelectorAll(".rev-sel-cb").forEach(cb=>cb.checked=false); revUpdateSel(); };
+  $("revDelSel").onclick=reviewDeleteSelected;
+  $("revRenameSel").onclick=reviewRenameSelected;
+  revUpdateSel();
+
+  // Chọn nhiều TRACK (trong từng ID) để đổi ID / xóa hàng loạt
+  document.querySelectorAll(".rev-track .rt-check").forEach(chk=>{
+    chk.onclick=(e)=>{ e.stopPropagation(); const card=chk.closest(".rev-track");
+      toggleTrackSel(card.dataset.td, card); };
+  });
+  $("revTrackNone").onclick=()=>{ revTrackSel.clear();
+    document.querySelectorAll(".rev-track.tsel").forEach(c=>c.classList.remove("tsel")); revUpdateTrackSel(); };
+  $("revTrackDel").onclick=revDeleteSelectedTracks;
+  $("revTrackRename").onclick=revRenameSelectedTracks;
+  revUpdateTrackSel();
+
+  // Ngăn kéo "ID đã gán" (dùng lại y hệt màn Gán hàng loạt) để đối chiếu khi xem lại theo ID
+  $("gridRailTab").onclick=toggleGridRail;
+  setupGridRailResizer();
+  applyGridRail();
+  fillIdStrip($("gridIdStrip"));
+}
+
+function revUpdateTrackSel(){
+  const bar=$("revTrackBar"); if(!bar) return;
+  const n=revTrackSel.size;
+  bar.style.display = n ? "flex" : "none";
+  const el=$("revTrackN"); if(el) el.textContent=n;
+}
+function toggleTrackSel(td, cardEl){
+  revTrackSel.has(td) ? revTrackSel.delete(td) : revTrackSel.add(td);
+  if(cardEl) cardEl.classList.toggle("tsel", revTrackSel.has(td));
+  revUpdateTrackSel();
+}
+
+// Đổi/gộp ID cho các TRACK đã tick (dồn về 1 ID, kể cả track đang thuộc nhiều ID khác nhau)
+async function revRenameSelectedTracks(){
+  const ts=TRACKS.filter(t=>revTrackSel.has(t.track_dir));
+  if(!ts.length) return;
+  const cur=ts.filter(t=>t.global_pid>=0).map(t=>t.global_pid);
+  const suggest = cur.length ? Math.min(...cur) : "";
+  const v=prompt(`Đổi/gộp ${ts.length} track đã chọn sang ID nào?\n`+
+                 `→ Các track này sẽ mang cùng ID đó (dồn về 1 người).`, String(suggest));
+  if(v===null) return;
+  const np=parseInt((v||"").trim());
+  if(!(np>=0)){ toast("ID không hợp lệ", true); return; }
+  const batchPids=new Set(TRACKS.filter(t=>t.global_pid>=0).map(t=>t.global_pid));
+  if(DS_PIDS.includes(np) && !batchPids.has(np)){
+    if(!confirm(`⚠️ ID ${np} đã là người cũ trong dataset — gộp sẽ dồn vào người đó. Vẫn làm?`)) return;
+  }
+  for(const t of ts){
+    t.global_pid=np;
+    await post("/api/label",{track_dir:t.track_dir, global_pid:np});
+  }
+  revTrackSel.clear();
+  toast(`Đã đổi ${ts.length} track → ID ${np}`);
+  renderReview();
+}
+
+// Xóa hẳn các TRACK đã tick
+async function revDeleteSelectedTracks(){
+  const ts=TRACKS.filter(t=>revTrackSel.has(t.track_dir));
+  if(!ts.length) return;
+  const tot=ts.reduce((s,t)=>s+t.num_images,0);
+  if(!confirm(`Xóa HẲN ${ts.length} track đã chọn · ${tot} ảnh?\nKhông thể hoàn tác.`)) return;
+  for(const t of ts){
+    await post("/api/delete",{track_dir:t.track_dir});
+    const i=TRACKS.findIndex(x=>x.track_dir===t.track_dir);
+    if(i>=0) TRACKS.splice(i,1);
+  }
+  revTrackSel.clear();
+  toast(`Đã xóa ${ts.length} track`);
+  renderReview();
+}
+
+function revUpdateSel(){
+  const n=revSel.size;
+  const info=$("revSelInfo"); if(info) info.textContent = n?`đã chọn ${n} ID`:"";
+  const btn=$("revDelSel"); if(btn){ btn.disabled=!n; btn.textContent = n?`🗑 Xóa ${n} ID đã chọn`:"🗑 Xóa ID đã chọn"; }
+  const rn=$("revRenameSel"); if(rn){ rn.disabled=!n; rn.textContent = n?`✏️ Đổi/gộp ${n} ID`:"✏️ Đổi/gộp ID đã chọn"; }
+}
+
+// Gộp/đổi nhiều ID đã tick thành 1 ID (dồn các ID bị tách của cùng người)
+async function reviewRenameSelected(){
+  const pids=[...revSel];
+  if(!pids.length) return;
+  const suggest = pids.filter(p=>p>=0).length ? Math.min(...pids.filter(p=>p>=0)) : "";
+  const v=prompt(`Gộp/đổi ${pids.length} ID đã chọn (${pids.join(", ")}) thành ID nào?\n`+
+                 `→ Toàn bộ track của các ID này sẽ mang ID đó (dồn thành 1 người).`, String(suggest));
+  if(v===null) return;
+  const np=parseInt((v||"").trim());
+  if(!(np>=0)){ toast("ID không hợp lệ", true); return; }
+  const ts=TRACKS.filter(t=>revSel.has(t.global_pid));
+  // cảnh báo nếu ID đích là người CŨ trong dataset (không phải của đợt này)
+  const batchPids=new Set(TRACKS.filter(t=>t.global_pid>=0).map(t=>t.global_pid));
+  if(DS_PIDS.includes(np) && !batchPids.has(np)){
+    if(!confirm(`⚠️ ID ${np} đã là người cũ trong dataset — gộp sẽ dồn vào người đó. Vẫn làm?`)) return;
+  }
+  for(const t of ts){
+    t.global_pid=np;
+    await post("/api/label",{track_dir:t.track_dir, global_pid:np});
+  }
+  revSel.clear();
+  toast(`Đã gộp ${ts.length} track (${pids.length} ID) → ID ${np}`);
+  renderReview();
+}
+
+// Xóa nhiều ID đã tick cùng lúc
+async function reviewDeleteSelected(){
+  const pids=[...revSel];
+  if(!pids.length) return;
+  const ts=TRACKS.filter(t=>revSel.has(t.global_pid));
+  const tot=ts.reduce((s,t)=>s+t.num_images,0);
+  if(!confirm(`Xóa HẲN ${pids.length} ID đã chọn · ${ts.length} track · ${tot} ảnh?\nKhông thể hoàn tác.`)) return;
+  for(const t of ts){
+    await post("/api/delete",{track_dir:t.track_dir});
+    const i=TRACKS.findIndex(x=>x.track_dir===t.track_dir);
+    if(i>=0) TRACKS.splice(i,1);
+  }
+  revSel.clear();
+  toast(`Đã xóa ${pids.length} ID`);
+  renderReview();
 }
 
 function changeTrackId(td, val){
@@ -678,7 +1318,7 @@ function changeTrackId(td, val){
   }
   const t=TRACKS.find(x=>x.track_dir===td); if(!t) return;
   t.global_pid=p;
-  post("/api/label",{track_dir:td,global_pid:p}).then(r=>{ if(r) NEXT_PID=r.next_pid; renderReview(); });
+  post("/api/label",{track_dir:td,global_pid:p}).then(r=>{ if(r){ NEXT_PID=r.next_pid; if(r.free_pids)FREE_PIDS=r.free_pids; } renderReview(); });
 }
 
 async function reviewDelete(td, n){
@@ -686,6 +1326,22 @@ async function reviewDelete(td, n){
   await post("/api/delete",{track_dir:td});
   const i=TRACKS.findIndex(x=>x.track_dir===td);
   if(i>=0) TRACKS.splice(i,1);
+  renderReview();
+}
+
+// Xóa CẢ NGƯỜI: toàn bộ track của 1 ID (trong màn Xem lại theo ID)
+async function reviewDeletePerson(pid){
+  const ts=TRACKS.filter(t=>t.global_pid===pid);
+  if(!ts.length) return;
+  const tot=ts.reduce((s,t)=>s+t.num_images,0);
+  const label = pid>=0?("ID "+pid):(pid===-1?"nhóm Đã bỏ qua":"nhóm Chưa xem");
+  if(!confirm(`Xóa HẲN ${label} cùng TOÀN BỘ ${ts.length} track · ${tot} ảnh?\nKhông thể hoàn tác.`)) return;
+  for(const t of ts){
+    await post("/api/delete",{track_dir:t.track_dir});
+    const i=TRACKS.findIndex(x=>x.track_dir===t.track_dir);
+    if(i>=0) TRACKS.splice(i,1);
+  }
+  toast(`Đã xóa ${label} (${ts.length} track)`);
   renderReview();
 }
 
@@ -699,7 +1355,9 @@ function renderTrack(){
   const t = curTrack();
   if(!t){ $("pos").textContent="Không có track"; $("mimg").style.display="none";
           $("ph").style.display="flex"; $("ph").textContent="Trống"; $("info").textContent=""; return; }
-  $("pos").textContent = `Track ${cur+1} / ${view.length}`;
+  const nUnseen = view.reduce((s,idx)=>s+(TRACKS[idx].global_pid===-2?1:0),0);
+  $("pos").innerHTML = `Track ${cur+1} / ${view.length}` +
+    (nUnseen?` · <b style="color:var(--warn)">còn ${nUnseen} chưa gán</b>`:` · <b style="color:var(--ok)">đã gán hết</b>`);
   const img=$("mimg"), ph=$("ph");
   const src = t.montage ? "/montage?track_dir="+encodeURIComponent(t.track_dir)
                         : "/crop?track_dir="+encodeURIComponent(t.track_dir);
@@ -711,6 +1369,7 @@ function renderTrack(){
             : `<span class="badge unseen">chưa xem</span>`);
   $("info").innerHTML = `cam ${t.cam} · <code>${t.track_dir}</code> · <span id="nImg">${t.num_images}</span> ảnh<br>${badge}`;
   $("pidIn").value = t.global_pid>=0 ? t.global_pid : "";
+  fillFreePids($("freeBar"), "pidIn");
   renderTrackImages(t);
 }
 
@@ -738,8 +1397,13 @@ async function renderTrackImages(t){
   });
 }
 
-function renderStrip(d){
-  const strip = $("idStrip"); strip.innerHTML="";
+function renderStrip(d){ fillIdStrip($("idStrip")); }
+
+// Dựng cột "ID đã gán (đợt này)" vào 1 phần tử bất kỳ — dùng chung cho màn gán
+// từng track (#idStrip) và ngăn kéo màn Gán hàng loạt (#gridIdStrip).
+function fillIdStrip(strip){
+  if(!strip) return;
+  strip.innerHTML="";
   const reps={};
   TRACKS.forEach(t=>{ if(t.global_pid>=0 && !(t.global_pid in reps)) reps[t.global_pid]=t; });
   Object.keys(reps).map(Number).sort((a,b)=>a-b).forEach(pid=>{
@@ -756,6 +1420,24 @@ function renderStrip(d){
   if(!strip.children.length)
     strip.innerHTML='<div class="sub">Chưa gán ai. Người đầu tiên → gõ <b>'+NEXT_PID+'</b> rồi Enter.</div>';
 }
+
+// Strip "số ID bị bỏ trống" (đã xóa lúc lọc) → bấm 1 số để điền vào ô gán (inputId).
+// FREE_PIDS do backend tính (lỗ trong dãy ID thật), tự loại số vừa gán nên không trùng.
+function fillFreePids(box, inputId){
+  if(!box) return;
+  if(!FREE_PIDS.length){ box.style.display="none"; box.innerHTML=""; return; }
+  box.style.display="flex";
+  box.innerHTML='<span class="fp-label">Số trống (đã xóa) — bấm để điền:</span>';
+  FREE_PIDS.forEach(p=>{
+    const b=document.createElement("button");
+    b.type="button"; b.className="fp-chip"; b.textContent=p;
+    b.title="Điền ID "+p+" (số bị bỏ trống) vào ô gán";
+    b.onclick=()=>{ const inp=$(inputId); if(inp){ inp.value=p; inp.focus(); } };
+    box.appendChild(b);
+  });
+}
+// Làm mới cả 2 thanh (màn gán từng track + màn gán hàng loạt) — cái nào không có sẽ bỏ qua.
+function refreshFreeBars(){ fillFreePids($("freeBar"),"pidIn"); fillFreePids($("gridFreeBar"),"gridPid"); }
 
 function updateCommitBar(stats){
   const bar=$("commitBar"); if(!bar) return;
@@ -777,7 +1459,7 @@ async function post(url, body){
 function assignPid(pid){
   const t=curTrack(); if(!t) return;
   t.global_pid=pid; lastPid=pid;
-  post("/api/label",{track_dir:t.track_dir,global_pid:pid}).then(r=>{ if(r){updateCommitBar(r.stats);NEXT_PID=r.next_pid;} renderStrip(DATA);});
+  post("/api/label",{track_dir:t.track_dir,global_pid:pid}).then(r=>{ if(r){updateCommitBar(r.stats);NEXT_PID=r.next_pid;if(r.free_pids)FREE_PIDS=r.free_pids;} renderStrip(DATA); refreshFreeBars();});
   next();
 }
 function assignFromInput(){ const v=$("pidIn").value.trim();
@@ -805,12 +1487,34 @@ async function resetBatch(){
   setTimeout(loadState,300);
 }
 
+let committing=false;   // chặn bấm 'Hoàn tất' 2 lần → tránh gộp/copy lặp
 async function commit(){
+  if(committing){ toast("Đang gộp… đợi chút",true); return; }
   if(!confirm("Gộp đợt này vào dataset rồi xóa dữ liệu tạm (crops, montages, labels, video)?")) return;
+  committing=true;
   const r=await post("/api/commit",{});
-  if(r&&r.ok){ lastCommit=r.result; toast("Đã gộp vào dataset"); }
+  if(!(r&&r.started)){ committing=false; return; }   // 409/lỗi → post() đã toast
+  showCommitModal(); pollCommit();                    // chạy nền → theo dõi thanh %
+}
+function showCommitModal(){
+  $("commitModal").style.display="flex";
+  $("commitFill").style.width="0%";
+  $("commitMsg").textContent="Bắt đầu…";
+}
+async function pollCommit(){
+  let p;
+  try{ p=await (await fetch("/api/commit_progress")).json(); }
+  catch(e){ setTimeout(pollCommit,800); return; }
+  const pct = p.total ? Math.min(100, Math.round(100*p.done/p.total)) : (p.running?0:100);
+  $("commitFill").style.width=pct+"%";
+  $("commitMsg").innerHTML = `${p.phase||"Đang gộp…"}<br><b>${(p.done||0).toLocaleString()}</b> / ${(p.total||0).toLocaleString()} ảnh · ${pct}%`;
+  if(p.running){ setTimeout(pollCommit, 500); return; }
+  $("commitModal").style.display="none";
+  committing=false;
+  if(p.error){ toast("Gộp lỗi: "+p.error, true); }
+  else { lastCommit=p.result; toast("Đã gộp vào dataset"); }
   reviewMode=false;
-  setTimeout(loadState,400);
+  setTimeout(loadState,300);
 }
 
 // Box thống kê đợt vừa gộp (camera coverage) — hiện ở màn idle
@@ -849,12 +1553,22 @@ function openPreview(pid, src){
   previewPid = pid;
   $("previewImg").src = src;
   $("previewLbl").textContent = pid>=0 ? ("ID " + pid) : (pid===-1 ? "Đã bỏ qua" : "Chưa xem");
-  $("previewAssign").style.display = pid>=0 ? "" : "none";
+  // Màn Xem lại theo ID không có "track hiện tại" → chỉ xem để đối chiếu, ẩn nút gán
+  $("previewAssign").style.display = (pid>=0 && !reviewMode) ? "" : "none";
+  // Ở màn Gán hàng loạt không có "track hiện tại" → nút này điền số vào ô gán hàng loạt
+  $("previewAssign").textContent = gridMode ? "Điền ID này vào ô gán hàng loạt" : "Gán ID này cho track hiện tại";
   $("preview").style.display = "flex";
 }
 function closePreview(){ $("preview").style.display="none"; previewPid=null; }
 $("previewClose").onclick = closePreview;
-$("previewAssign").onclick = ()=>{ const p=previewPid; closePreview(); closeGallery(); if(p!=null) assignPid(p); };
+$("previewAssign").onclick = ()=>{ const p=previewPid; closePreview(); closeGallery();
+  if(p==null) return;
+  if(gridMode){                                   // màn lưới: điền số vào ô gán hàng loạt, không tự gán
+    const gi=$("gridPid"); if(gi){ gi.value=p; gi.focus(); }
+    toast("Đã điền ID "+p+" — chọn track rồi bấm Gán"); return;
+  }
+  assignPid(p);
+};
 $("preview").onclick = (e)=>{ if(e.target===$("preview")) closePreview(); };
 
 // ── Gallery: xem toàn bộ người đã có để quét/so sánh ─────────────────────────
@@ -884,25 +1598,123 @@ function renderGallery(filter){
 $("galleryClose").onclick = closeGallery;
 $("gallery").onclick = (e)=>{ if(e.target===$("gallery")) closeGallery(); };
 
+// ── Nạp thêm video vào đợt đang làm (Hướng C) ────────────────────────────────
+async function amRefresh(){
+  $("amBody").innerHTML='<p class="muted">Đang quét video…</p>';
+  try{ const d=await (await fetch("/api/state")).json(); if(d.videos) DATA.videos=d.videos; }catch(e){}
+  renderAddMore();
+}
+async function openAddMore(){ $("addMoreModal").style.display="flex"; await amRefresh(); }
+function renderAddMore(){
+  const vids=(DATA&&DATA.videos)||[];
+  const body=$("amBody"), start=$("amStart");
+  if(!vids.length){
+    body.innerHTML='<p class="muted">Chưa có video mới trong <code>video/</code>. Bỏ các đoạn 5 phút mới vào rồi bấm <b>Quét lại</b>.</p>';
+    start.disabled=true; return;
+  }
+  start.disabled=false;
+  body.innerHTML=vids.map(v=>`
+    <div class="vid-row">
+      <span style="flex:1">${v.name}</span>
+      <label class="muted">Cam</label>
+      <input type="number" min="1" value="${v.cam_id}" data-amvid="${encodeURIComponent(v.video)}">
+    </div>`).join("");
+}
+$("amClose").onclick=()=>{ $("addMoreModal").style.display="none"; };
+$("amRescan").onclick=amRefresh;
+$("amStart").onclick=async()=>{
+  const cameras=[...document.querySelectorAll("input[data-amvid]")].map(inp=>({
+    video:decodeURIComponent(inp.dataset.amvid), cam_id:parseInt(inp.value)||1
+  }));
+  if(!cameras.length){ toast("Không có video để nạp",true); return; }
+  $("addMoreModal").style.display="none";
+  await fetch("/api/start",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cameras})});
+  loadState();   // → chuyển sang màn xử lý, crop xong tự quay lại gán với track mới
+};
+$("addMoreModal").onclick=(e)=>{ if(e.target===$("addMoreModal")) $("addMoreModal").style.display="none"; };
+
 // ── Trình duyệt dataset myreid ───────────────────────────────────────────────
 let DSDATA=[], dsPid=null, dsImages=[], dsSel=new Set(), dsFilter="real", dsQuery="";
+let dsListScroll=0;   // vị trí cuộn của lưới ID (để bấm "← Tất cả ID" không nhảy lên đầu)
+let dsSource="main";  // "main" = myreid | "aux" = dataset phụ (myreid2, xem + gộp + xóa)
+const dsSuf = ()=> dsSource==="aux" ? "2" : "";   // hậu tố endpoint cho dataset phụ
+let dsCache={main:null, aux:null};        // cache identities theo nguồn → đổi chính/phụ KHÔNG tải lại
+let dsScrollBy={main:0, aux:0};           // nhớ vị trí cuộn riêng từng nguồn (đối chiếu mượt)
+let dsPidSelBy={main:new Set(), aux:new Set()};   // ID đang tick để xóa hàng loạt, riêng từng nguồn
+const dsPidSel = ()=> dsPidSelBy[dsSource];
 
 async function openDataset(){
+  dsSource="main"; dsPid=null;
+  dsCache={main:null, aux:null}; dsScrollBy={main:0, aux:0};   // mở mới → dữ liệu tươi
+  dsPidSelBy.main.clear(); dsPidSelBy.aux.clear();
   $("dsBrowser").style.display="flex";
   const gs=$("dsSearch"); gs.value=dsQuery;
   gs.oninput=()=>{ dsQuery=gs.value.trim(); if(dsPid===null) renderDsList(); };
   await loadDataset();
 }
-function closeDataset(){ $("dsBrowser").style.display="none"; dsPid=null; loadState(); }
+function closeDataset(){ $("dsBrowser").style.display="none"; dsPid=null; dsSource="main"; loadState(); }
 
-async function loadDataset(){
-  try{
-    const d=await (await fetch("/api/dataset")).json();
-    DSDATA=d.identities||[];
-    if(d.stats) setDsInfo(d.stats);
-  }catch(e){ DSDATA=[]; }
+async function loadDataset(force){
+  let d={};
+  if(!force && dsCache[dsSource]){           // đã có cache → KHÔNG fetch lại (đổi chính/phụ tức thì)
+    DSDATA=dsCache[dsSource].identities; d=dsCache[dsSource].raw||{};
+  }else{
+    try{
+      d=await (await fetch("/api/dataset"+dsSuf())).json();
+      DSDATA=d.identities||[];
+      dsCache[dsSource]={identities:DSDATA, raw:d};
+    }catch(e){ DSDATA=[]; d={}; }
+  }
+  if(dsSource==="main" && d.stats) setDsInfo(d.stats);   // header chỉ phản ánh dataset chính
+  renderDsHead(d);
   if(dsPid!==null && DSDATA.some(x=>x.pid===dsPid)) openIdentity(dsPid);
-  else renderDsList();
+  else { renderDsList(); $("dsBody").scrollTop = dsScrollBy[dsSource]||0; }   // khôi phục scroll nguồn
+}
+
+// Nút chuyển Chính/Phụ + nút Gộp trên đầu trình duyệt dataset
+function renderDsHead(d){
+  const main = dsSource==="main";
+  $("dsSrcToggle").innerHTML =
+    `<button class="${main?'primary':''}" onclick="switchDsSource('main')">Dataset chính</button>`+
+    `<button class="${!main?'primary':''}" onclick="switchDsSource('aux')">Dataset phụ${(d&&d.present===false)?' (trống)':''}</button>`;
+  $("dsImportBtn").style.display = main ? "none" : "";                    // import chỉ ở dataset phụ
+  $("dsMergeBtn").style.display = (!main && DSDATA.length>0) ? "" : "none";
+}
+async function ds2Import(){
+  toast("Mở hộp thoại chọn folder trên máy bạn… (có thể nằm sau trình duyệt)");
+  let r = await post("/api/ds2_pick_import", {});   // mở dialog native + import luôn
+  if(r && r.fallback){                               // máy không mở được dialog → nhập tay
+    const p = prompt(
+      "Không mở được hộp thoại. Dán ĐƯỜNG DẪN folder dataset phụ:\n"+
+      "• Folder bounding_box_train (chỉ ảnh), HOẶC\n"+
+      "• Folder gốc Market-1501 (có bounding_box_train/query/...).", "");
+    if(!p) return;
+    toast("Đang import…");
+    r = await post("/api/ds2_import", {path:p});
+  }
+  if(!r) return;
+  if(r.cancelled) return;                            // user bấm Hủy ở hộp thoại
+  if(r.ok){ toast(`Đã import ${r.copied} ảnh`); dsSource="aux"; dsPid=null;
+            dsCache.aux=null; dsPidSelBy.aux.clear(); loadDataset(); }   // phụ đổi → nạp lại
+  else toast(r.error||"Import lỗi", true);
+}
+function switchDsSource(src){
+  if(dsSource===src) return;
+  if(dsPid===null) dsScrollBy[dsSource]=$("dsBody").scrollTop;   // nhớ scroll lưới nguồn cũ
+  dsSource=src; dsPid=null; dsSel.clear();
+  $("dsSearch").value=dsQuery;        // GIỮ filter + ô tìm để đối chiếu (không reset, không tải lại)
+  loadDataset();                      // có cache → tức thì, không fetch
+}
+async function mergeDataset2(){
+  if(!confirm("Gộp TOÀN BỘ dataset phụ vào myreid?\n• Mỗi ID phụ được cấp ID MỚI (không trùng ID cũ).\n• Giữ nguyên split train/query/gallery.\n• KHÔNG tự xóa dataset phụ.\nNên backup myreid trước. Không thể hoàn tác tự động.")) return;
+  const r=await post("/api/merge_dataset2",{});
+  if(r&&r.ok){
+    const s=r.result||{};
+    toast(`Đã gộp: +${s.new_ids||0} ID, +${s.new_distractor||0} distractor, ${s.images||0} ảnh`);
+    if(s.dataset) setDsInfo(s.dataset);
+    dsCache.main=null;        // dataset chính vừa đổi → buộc nạp lại
+    switchDsSource("main");   // gộp xong → về xem dataset chính
+  }
 }
 function setDsInfo(ds){
   $("dsInfo").textContent=`Dataset · ${ds.identities||0} người · ${ds.train||0} train · ${ds.query||0} query · ${ds.gallery||0} gallery`;
@@ -910,49 +1722,104 @@ function setDsInfo(ds){
 
 function dsFiltered(){
   let xs=DSDATA.slice();
-  if(dsFilter==="real")           xs=xs.filter(x=>!x.distractor);
-  else if(dsFilter==="onecam")    xs=xs.filter(x=>!x.distractor && x.ncams<=1);
-  else if(dsFilter==="distractor")xs=xs.filter(x=>x.distractor);
+  if(dsFilter==="real")            xs=xs.filter(x=>!x.distractor);
+  else if(dsFilter==="cam1")       xs=xs.filter(x=>!x.distractor && x.ncams===1);
+  else if(dsFilter==="cam2")       xs=xs.filter(x=>!x.distractor && x.ncams===2);
+  else if(dsFilter==="cam3")       xs=xs.filter(x=>!x.distractor && x.ncams===3);
+  else if(dsFilter==="distractor") xs=xs.filter(x=>x.distractor);
   if(dsQuery) xs=xs.filter(x=>(""+x.pid).includes(dsQuery));
   return xs;
 }
 function thumbSrc(x){
-  if(x.has_avatar) return "/identity?pid="+x.pid;
-  if(x.thumb) return "/ds_img?split="+x.thumb.split+"&name="+encodeURIComponent(x.thumb.name);
+  if(dsSource==="main" && x.has_avatar) return "/identity?pid="+x.pid;   // avatar chỉ có ở dataset chính
+  if(x.thumb) return "/ds_img"+dsSuf()+"?split="+x.thumb.split+"&name="+encodeURIComponent(x.thumb.name);
   return "";
 }
 
 function renderDsList(){
   dsPid=null; dsSel.clear();
-  $("dsTitle").textContent="Dataset myreid";
-  const nReal=DSDATA.filter(x=>!x.distractor).length;
-  const nOne=DSDATA.filter(x=>!x.distractor&&x.ncams<=1).length;
+  $("dsTitle").textContent = dsSource==="aux" ? "Dataset phụ (myreid2)" : "Dataset myreid";
+  const selN=dsPidSel().size;
+  const whereLbl = dsSource==="aux" ? "phụ" : "chính";
+  const bulk=`<div class="ds-bulkbar" id="dsBulkBar" style="${selN?'':'display:none'}">
+      <b id="dsBulkN">${selN}</b>&nbsp;ID đã chọn (dataset ${whereLbl})
+      <button onclick="dsClearPidSel()">Bỏ chọn</button>
+      <button class="red" onclick="dsDeleteSelectedIds()">🗑 Xóa <b id="dsBulkDelN">${selN}</b> ID đã chọn</button>
+      <span class="muted" style="font-size:11.5px;font-weight:400">· tick ô ✓ ở góc thẻ để chọn nhiều</span>
+    </div>`;
+  const real=DSDATA.filter(x=>!x.distractor);
+  const nReal=real.length;
+  const n1=real.filter(x=>x.ncams===1).length;
+  const n2=real.filter(x=>x.ncams===2).length;
+  const n3=real.filter(x=>x.ncams===3).length;
   const nDis=DSDATA.filter(x=>x.distractor).length;
-  const f=[["real","Người thật ("+nReal+")"],["onecam","⚠ 1 camera ("+nOne+")"],
+  const f=[["real","Người thật ("+nReal+")"],
+           ["cam1","⚠ 1 cam ("+n1+")"],["cam2","2 cam ("+n2+")"],["cam3","3 cam ("+n3+")"],
            ["distractor","Distractor ("+nDis+")"],["all","Tất cả ("+DSDATA.length+")"]];
   $("dsFilters").innerHTML=f.map(([k,lbl])=>
     `<button class="${dsFilter===k?"primary":""}" onclick="setDsFilter('${k}')">${lbl}</button>`).join("");
   const xs=dsFiltered();
   $("dsCount").textContent=`${xs.length} hiển thị`;
-  if(!xs.length){ $("dsBody").innerHTML='<div class="ds-grid"><div class="ds-empty">'+
-      (DSDATA.length?'Không có ID khớp bộ lọc':'Dataset myreid chưa có ai')+'</div></div>'; return; }
+  if(!xs.length){
+    const empty = DSDATA.length ? 'Không có ID khớp bộ lọc'
+      : (dsSource==="aux" ? 'Chưa có dataset phụ — bấm <b>📁 Import</b> ở trên để nạp folder (bounding_box_train hoặc Market root)' : 'Dataset myreid chưa có ai');
+    $("dsBody").innerHTML=bulk+'<div class="ds-grid"><div class="ds-empty">'+empty+'</div></div>'; return; }
   let html='<div class="ds-grid">';
   xs.forEach(x=>{
     const cls=x.distractor?"distractor":(x.ncams<=1?"onecam":"");
+    const sel=dsPidSel().has(x.pid)?" idsel":"";
     const label=x.distractor?`distractor`:`ID ${x.pid}`;
-    html+=`<div class="id-card ${cls}" onclick="openIdentity(${x.pid})" title="Xem mọi ảnh của ${label}">
+    html+=`<div class="id-card ${cls}${sel}" data-pid="${x.pid}" onclick="openIdentity(${x.pid})" title="Xem mọi ảnh của ${label}">
+      <span class="id-chk" onclick="event.stopPropagation();toggleIdSel(${x.pid})" title="Chọn ID để xóa hàng loạt">✓</span>
       <img loading="lazy" src="${thumbSrc(x)}" onerror="this.style.visibility='hidden'">
       <span class="corner-id">${x.pid}</span>
       <div class="ds-card-meta"><b>${label}</b><br>${x.total} ảnh · ${x.ncams} cam</div></div>`;
   });
-  $("dsBody").innerHTML=html+'</div>';
+  $("dsBody").innerHTML=bulk+html+'</div>';
 }
-function setDsFilter(k){ dsFilter=k; renderDsList(); }
+function setDsFilter(k){ dsFilter=k; dsListScroll=0; renderDsList(); }
+// Quay lại lưới ID, giữ nguyên chỗ đang xem trước khi bấm vào 1 ID
+function backToDsList(){ renderDsList(); $("dsBody").scrollTop=dsListScroll; }
+
+// ── Chọn nhiều ID + xóa hàng loạt (đối chiếu/dọn ID trùng) ──────────────────
+function toggleIdSel(pid){
+  const s=dsPidSel();
+  if(s.has(pid)) s.delete(pid); else s.add(pid);
+  const card=$("dsBody").querySelector('.id-card[data-pid="'+pid+'"]');
+  if(card) card.classList.toggle("idsel", s.has(pid));
+  renderDsBulkBar();                       // cập nhật thanh số lượng, KHÔNG vẽ lại lưới
+}
+function renderDsBulkBar(){
+  const n=dsPidSel().size, bar=$("dsBulkBar");
+  if(!bar) return;
+  bar.style.display = n ? "" : "none";
+  const a=$("dsBulkN"); if(a) a.textContent=n;
+  const b=$("dsBulkDelN"); if(b) b.textContent=n;
+}
+function dsClearPidSel(){ dsPidSel().clear(); renderDsList(); $("dsBody").scrollTop=dsScrollBy[dsSource]||0; }
+async function dsDeleteSelectedIds(){
+  const s=dsPidSel(); if(!s.size) return;
+  const pids=[...s];
+  const where = dsSource==="aux" ? "dataset PHỤ (myreid2)" : "dataset CHÍNH (myreid)";
+  if(!confirm(`Xóa HẲN ${pids.length} ID khỏi ${where}?\n${pids.slice(0,20).join(", ")}${pids.length>20?'…':''}\nKhông thể hoàn tác.`)) return;
+  const sc=$("dsBody").scrollTop;
+  const r=await post("/api/ds_delete_identities",{pids, source:dsSource});
+  if(r&&r.ok){
+    toast(`Đã xóa ${r.removed} ID (${r.deleted} ảnh)`);
+    if(dsSource==="main" && r.dataset) setDsInfo(r.dataset);
+    const gone=new Set(pids);
+    DSDATA=DSDATA.filter(x=>!gone.has(x.pid));          // cập nhật cục bộ → không tải lại
+    if(dsCache[dsSource]) dsCache[dsSource].identities=DSDATA;
+    s.clear();
+    renderDsHead({}); renderDsList(); $("dsBody").scrollTop=sc;   // giữ vị trí đang xem
+  }
+}
 
 async function openIdentity(pid){
+  dsListScroll=$("dsBody").scrollTop;   // nhớ chỗ đang xem trong lưới ID
   dsPid=pid; dsSel.clear();
   $("dsBody").innerHTML='<div class="ds-empty" style="padding:40px">Đang tải…</div>';
-  try{ dsImages=(await (await fetch("/api/identity_images?pid="+pid)).json()).images||[]; }
+  try{ dsImages=(await (await fetch("/api/identity_images"+dsSuf()+"?pid="+pid)).json()).images||[]; }
   catch(e){ dsImages=[]; }
   renderDsDetail();
 }
@@ -960,7 +1827,7 @@ async function openIdentity(pid){
 function renderDsDetail(){
   const info=DSDATA.find(x=>x.pid===dsPid)||{};
   const isD=info.distractor;
-  $("dsTitle").innerHTML=`<button class="ghost" onclick="renderDsList()" style="padding:4px 10px;margin-right:8px">← Tất cả ID</button>`+
+  $("dsTitle").innerHTML=`<button class="ghost" onclick="backToDsList()" style="padding:4px 10px;margin-right:8px">← Tất cả ID</button>`+
     (isD?`distractor ${dsPid}`:`ID ${dsPid}`)+` <span class="muted" style="font-weight:400;font-size:12px">· ${dsImages.length} ảnh · ${(info.ncams||0)} camera</span>`;
   $("dsCount").textContent="";
   if(!dsImages.length){ $("dsBody").innerHTML='<div class="ds-empty">Không còn ảnh nào</div>'; return; }
@@ -976,7 +1843,7 @@ function renderDsDetail(){
     xs.forEach(im=>{
       const key=im.split+"/"+im.name;
       body+=`<div class="dscell" data-key="${key}">
-        <img loading="lazy" src="/ds_img?split=${im.split}&name=${encodeURIComponent(im.name)}">
+        <img loading="lazy" src="/ds_img${dsSuf()}?split=${im.split}&name=${encodeURIComponent(im.name)}">
         <span class="cam">c${im.cam}</span><span class="chk">✓</span></div>`;
     });
     body+=`</div>`;
@@ -984,22 +1851,29 @@ function renderDsDetail(){
 
   const warn = (!isD && (info.ncams||0)<=1)
     ? '<span class="muted" style="color:var(--warn)">⚠ Chỉ 1 camera — dễ gây camera-bias cho ReID.</span>' : '';
-  $("dsBody").innerHTML=`
+  const toolbar = dsSource==="main" ? `
     <div class="ds-toolbar">
       <button onclick="dsSelectAll(true)">Chọn tất cả</button>
       <button onclick="dsSelectAll(false)">Bỏ chọn</button>
       <span class="selinfo" id="dsSelInfo">0 ảnh đã chọn</span>
       <span class="muted" style="font-size:11.5px">· kéo chuột để quét chọn theo vùng</span>
       <button class="primary" id="dsBtnAvatar" disabled onclick="dsSetAvatar()">⭐ Đặt làm đại diện</button>
+      <button id="dsBtnQr" disabled onclick="qrSendSelected()" title="Sao chép ảnh đã chọn sang 1 folder QR">📤 Vào folder QR</button>
+      <button id="dsBtnSplit" disabled onclick="dsSplitSelected()" title="Tách ảnh đã chọn ra 1 ID MỚI — sửa ID bị trộn 2 người">✂️ Tạo ID mới</button>
       <button class="red" id="dsBtnDel" disabled onclick="dsDeleteSelected()">🗑 Xóa ảnh đã chọn</button>
-      <button class="red ghost" style="margin-left:auto;color:var(--bad);border-color:var(--bad)" onclick="dsDeleteIdentity()">Xóa hẳn người này</button>
-    </div>
-    ${warn}
-    ${body}`;
-  dsUpdateSelUI();
+      <button style="margin-left:auto" onclick="dsRenameIdentity()" title="Đổi số ID, hoặc gộp vào ID khác nếu trùng người">✏️ Đổi ID</button>
+      <button class="red ghost" style="color:var(--bad);border-color:var(--bad)" onclick="dsDeleteIdentity()">Xóa hẳn người này</button>
+    </div>` : `
+    <div class="ds-toolbar">
+      <span class="muted" style="font-size:12px">📖 Dataset phụ — chỉ xem ảnh. Gộp toàn bộ bằng nút <b>⤵ Gộp phụ → chính</b> ở trên.</span>
+      <button style="margin-left:auto" onclick="dsRenameIdentity()" title="Đổi số ID, hoặc gộp vào ID khác nếu trùng người">✏️ Đổi ID</button>
+    </div>`;
+  $("dsBody").innerHTML = toolbar + warn + body;
+  if(dsSource==="main") dsUpdateSelUI();
 }
 
 function toggleDsSel(key){
+  if(dsSource!=="main") return;                 // dataset phụ: chỉ xem, không chọn
   if(dsSel.has(key)) dsSel.delete(key); else dsSel.add(key);
   const cell=$("dsBody").querySelector('.dscell[data-key="'+CSS.escape(key)+'"]');
   if(cell) cell.classList.toggle("sel", dsSel.has(key));
@@ -1015,6 +1889,7 @@ function dsBandInit(){
   window.addEventListener("pointercancel",dsDragEnd);
 }
 function dsDragStart(e){
+  if(dsSource!=="main") return;                        // dataset phụ: chỉ xem
   if(dsPid===null || e.button!==0) return;            // chỉ ở khung chi tiết, chuột trái
   if(e.target.closest(".ds-toolbar")) return;          // không kéo trên thanh công cụ
   dsDrag.on=true; dsDrag.moved=false; dsDrag.sx=e.clientX; dsDrag.sy=e.clientY;
@@ -1047,6 +1922,8 @@ function dsDragMove(e){
   const n=new Set([...dsDrag.base,...dsDrag.hit]).size;
   const si=$("dsSelInfo"); if(si) si.textContent=n+" ảnh đã chọn";
   const del=$("dsBtnDel"); if(del) del.disabled=!n;
+  const qr=$("dsBtnQr"); if(qr) qr.disabled=!n;
+  const sp=$("dsBtnSplit"); if(sp) sp.disabled=!n;
   const av=$("dsBtnAvatar"); if(av) av.disabled=(n!==1);
 }
 function dsDragEnd(){
@@ -1072,6 +1949,8 @@ function dsUpdateSelUI(){
   const n=dsSel.size;
   const si=$("dsSelInfo"); if(si) si.textContent=n+" ảnh đã chọn";
   const del=$("dsBtnDel"); if(del) del.disabled=!n;
+  const qr=$("dsBtnQr"); if(qr) qr.disabled=!n;
+  const sp=$("dsBtnSplit"); if(sp) sp.disabled=!n;
   const av=$("dsBtnAvatar"); if(av){ av.disabled=(n!==1); av.title=n!==1?"Chọn đúng 1 ảnh":""; }
 }
 
@@ -1081,8 +1960,70 @@ function dsSelList(){
 async function dsDeleteSelected(){
   if(!dsSel.size) return;
   if(!confirm(`Xóa ${dsSel.size} ảnh đã chọn khỏi dataset myreid?\nKhông thể hoàn tác.`)) return;
+  const gone=new Set(dsSel);
+  const sc=$("dsBody").scrollTop;                 // nhớ vị trí cuộn để xóa tiếp không bị nhảy lên đầu
   const r=await post("/api/ds_delete_images",{pid:dsPid, images:dsSelList()});
-  if(r&&r.ok){ toast(`Đã xóa ${r.deleted} ảnh`); if(r.dataset) setDsInfo(r.dataset); dsSel.clear(); await loadDataset(); }
+  if(!(r&&r.ok)) return;
+  toast(`Đã xóa ${r.deleted} ảnh`);
+  if(r.dataset) setDsInfo(r.dataset);
+  dsSel.clear();
+  // Cập nhật cục bộ thay vì tải lại cả dataset → giữ nguyên ID đang xem & vị trí cuộn
+  dsImages=dsImages.filter(im=>!gone.has(im.split+"/"+im.name));
+  const info=DSDATA.find(x=>x.pid===dsPid);
+  if(info){
+    info.train  =dsImages.filter(i=>i.split==="train").length;
+    info.query  =dsImages.filter(i=>i.split==="query").length;
+    info.gallery=dsImages.filter(i=>i.split==="gallery").length;
+    info.total  =dsImages.length;
+    info.cams   =[...new Set(dsImages.map(i=>i.cam))].sort((a,b)=>a-b);
+    info.ncams  =info.cams.length;
+  }
+  if(!dsImages.length){                            // hết ảnh → identity biến mất, về danh sách
+    const idx=DSDATA.findIndex(x=>x.pid===dsPid);
+    if(idx>=0) DSDATA.splice(idx,1);
+    backToDsList();                                 // giữ chỗ đang xem trong lưới ID
+  }else{
+    renderDsDetail();
+    $("dsBody").scrollTop=sc;                       // khôi phục vị trí cuộn đang xem
+  }
+}
+// ✂️ Tách ảnh đã chọn ra 1 ID MỚI (sửa ID bị trộn 2 người)
+async function dsSplitSelected(){
+  if(!dsSel.size) return;
+  const gone=new Set(dsSel);
+  if(!confirm(`Tách ${dsSel.size} ảnh đã chọn ra 1 ID MỚI (khỏi ID ${dsPid})?\n`+
+              `Dùng khi ID này bị lẫn 2 người: chọn ảnh của người kia rồi tách ra.\n`+
+              `ID mới sẽ được TỰ đánh số (không trùng ID cũ).`)) return;
+  const moved=dsImages.filter(im=>gone.has(im.split+"/"+im.name));   // ảnh sẽ tách (lưu trước)
+  const sc=$("dsBody").scrollTop;
+  const r=await post("/api/ds_split_images",{pid:dsPid, images:dsSelList(), source:dsSource});
+  if(!(r&&r.ok)) return;
+  toast(`Đã tách ${r.moved} ảnh → ID mới ${r.new_pid}`);
+  if(dsSource==="main" && r.dataset) setDsInfo(r.dataset);
+  dsSel.clear();
+  // bỏ ảnh đã tách khỏi ID hiện tại
+  dsImages=dsImages.filter(im=>!gone.has(im.split+"/"+im.name));
+  const info=DSDATA.find(x=>x.pid===dsPid);
+  if(info){
+    info.train  =dsImages.filter(i=>i.split==="train").length;
+    info.query  =dsImages.filter(i=>i.split==="query").length;
+    info.gallery=dsImages.filter(i=>i.split==="gallery").length;
+    info.total  =dsImages.length;
+    info.cams   =[...new Set(dsImages.map(i=>i.cam))].sort((a,b)=>a-b);
+    info.ncams  =info.cams.length;
+  }
+  // Thêm ID MỚI vào danh sách để hiện ngay (avatar do server tạo → thumbnail sẵn)
+  const camsNew=[...new Set(moved.map(i=>i.cam))].sort((a,b)=>a-b);
+  DSDATA.push({pid:r.new_pid,
+    train:moved.filter(i=>i.split==="train").length,
+    query:moved.filter(i=>i.split==="query").length,
+    gallery:moved.filter(i=>i.split==="gallery").length,
+    total:moved.length, cams:camsNew, ncams:camsNew.length,
+    has_avatar:true, thumb:null, distractor:false});
+  DSDATA.sort((a,b)=>a.pid-b.pid);
+  if(dsCache[dsSource]) dsCache[dsSource].identities=DSDATA;   // giữ cache đồng bộ
+  if(!dsImages.length){ backToDsList(); }
+  else { renderDsDetail(); $("dsBody").scrollTop=sc; }
 }
 async function dsSetAvatar(){
   if(dsSel.size!==1) return;
@@ -1091,13 +2032,87 @@ async function dsSetAvatar(){
   if(r&&r.ok){ toast("Đã đặt ảnh đại diện"); }
   else toast("Không đặt được ảnh đại diện",true);
 }
+// Số ID thật bị bỏ trống (đã xóa) trong dataset đang xem — để gợi ý tái dùng khi đổi ID.
+function dsFreePids(){
+  const used=DSDATA.filter(x=>!x.distractor).map(x=>x.pid);
+  if(used.length<2) return [];
+  const set=new Set(used), lo=Math.min(...used), hi=Math.max(...used), out=[];
+  for(let p=lo;p<hi;p++) if(!set.has(p)) out.push(p);
+  return out;
+}
+async function dsRenameIdentity(){
+  const cur=dsPid;
+  const free=dsFreePids();
+  const freeLine = free.length
+    ? `\nSố ID đang trống (tái dùng được): ${free.slice(0,40).join(", ")}${free.length>40?" …":""}`
+    : "";
+  const v=prompt(
+    `Đổi ID ${cur} thành ID nào?\n`+
+    `• ID mới CHƯA có → đổi số (renumber).\n`+
+    `• ID mới ĐÃ có → GỘP ${cur} vào ID đó (dùng khi trùng người).`+
+    freeLine, "");
+  if(v===null) return;
+  const np=parseInt((v||"").trim());
+  if(!(np>=0)){ toast("ID không hợp lệ", true); return; }
+  if(np===cur){ toast("ID không đổi"); return; }
+  const exists=DSDATA.some(x=>x.pid===np);
+  const msg=exists
+    ? `ID ${np} ĐÃ tồn tại → GỘP toàn bộ ảnh của ID ${cur} vào ID ${np}.\nKhông thể hoàn tác. Tiếp tục?`
+    : `Đổi ID ${cur} → ${np}? (không thể hoàn tác)`;
+  if(!confirm(msg)) return;
+  const r=await post("/api/ds_rename_identity",{old_pid:cur, new_pid:np, source:dsSource});
+  if(r&&r.ok){
+    toast(r.merged ? `Đã gộp ${cur} vào ${np} (${r.moved} ảnh)` : `Đã đổi ID ${cur} → ${np} (${r.renamed} ảnh)`);
+    if(dsSource==="main" && r.dataset) setDsInfo(r.dataset);
+    dsCache[dsSource]=null; dsPidSel().delete(cur);   // dữ liệu đổi → nạp lại nguồn này
+    dsPid=null; loadDataset();
+  }else if(r) toast(r.error||"Đổi ID lỗi", true);
+}
 async function dsDeleteIdentity(){
   if(!confirm(`Xóa HẲN ${dsPid} cùng toàn bộ ảnh (train/query/gallery) và ảnh đại diện?\nKhông thể hoàn tác.`)) return;
   const r=await post("/api/ds_delete_identity",{pid:dsPid});
-  if(r&&r.ok){ toast(`Đã xóa người ID ${dsPid} (${r.deleted} ảnh)`); if(r.dataset) setDsInfo(r.dataset); dsPid=null; await loadDataset(); }
+  if(r&&r.ok){
+    toast(`Đã xóa người ID ${dsPid} (${r.deleted} ảnh)`);
+    if(r.dataset) setDsInfo(r.dataset);
+    const idx=DSDATA.findIndex(x=>x.pid===dsPid); if(idx>=0) DSDATA.splice(idx,1);  // DSDATA===cache ref
+    dsPidSel().delete(dsPid); dsPid=null; backToDsList();   // không tải lại, giữ vị trí
+  }
 }
 $("dsClose").onclick=closeDataset;
+$("dsMergeBtn").onclick=mergeDataset2;
+$("dsImportBtn").onclick=ds2Import;
 $("dsBrowser").onclick=(e)=>{ if(e.target===$("dsBrowser")) closeDataset(); };
+
+// ── Đưa ảnh đã chọn vào folder QR (SAO CHÉP — ảnh vẫn ở dataset) ──────────────
+async function qrSendSelected(){
+  if(!dsSel.size){ toast("Chưa chọn ảnh nào",true); return; }
+  $("qrPickN").textContent=dsSel.size;
+  $("qrPickName").value="";
+  $("qrPickList").innerHTML='<div class="muted" style="font-size:12px">Đang tải folder…</div>';
+  $("qrPick").style.display="flex";
+  let folders=[];
+  try{ folders=(await (await fetch("/api/qr_folders")).json()).folders||[]; }catch(e){}
+  if(!folders.length){
+    $("qrPickList").innerHTML='<div class="muted" style="font-size:12px">Chưa có folder nào — gõ tên bên dưới để tạo mới.</div>';
+  }else{
+    $("qrPickList").innerHTML=folders.map(f=>
+      `<button class="qrf" onclick="qrDoAdd('${encodeURIComponent(f.name)}')">📁 ${f.name}<span class="cnt">${f.count} ảnh</span></button>`).join("");
+  }
+}
+async function qrDoAdd(nameEnc){
+  const folder=decodeURIComponent(nameEnc);
+  const r=await post("/api/qr_add",{folder, images:dsSelList()});
+  if(r&&r.ok){ toast(`Đã chép ${r.copied} ảnh vào "${folder}"`); $("qrPick").style.display="none"; }
+}
+function qrCreateAndAdd(){
+  const name=$("qrPickName").value.trim();
+  if(!name){ toast("Nhập tên folder",true); return; }
+  qrDoAdd(encodeURIComponent(name));   // /api/qr_add tự tạo folder nếu chưa có
+}
+$("qrPickClose").onclick=()=>{ $("qrPick").style.display="none"; };
+$("qrPick").onclick=(e)=>{ if(e.target===$("qrPick")) $("qrPick").style.display="none"; };
+$("qrPickCreate").onclick=qrCreateAndAdd;
+$("qrPickName").onkeydown=(e)=>{ if(e.key==="Enter"){ e.preventDefault(); qrCreateAndAdd(); } };
 
 // ── Toast ────────────────────────────────────────────────────────────────────
 let tt; function toast(m,err){ const e=$("toast"); e.textContent=m; e.className="toast show"+(err?" err":"");
@@ -1106,18 +2121,22 @@ let tt; function toast(m,err){ const e=$("toast"); e.textContent=m; e.className=
 // ── Phím tắt ─────────────────────────────────────────────────────────────────
 document.addEventListener("keydown",e=>{
   if(e.key==="Escape"){
+    if($("qrPick").style.display!=="none"){ e.preventDefault(); $("qrPick").style.display="none"; return; }
+    if($("addMoreModal").style.display!=="none"){ e.preventDefault(); $("addMoreModal").style.display="none"; return; }
     if($("zoneModal").style.display!=="none"){ e.preventDefault(); $("zoneModal").style.display="none"; return; }
     if($("preview").style.display!=="none"){ e.preventDefault(); closePreview(); return; }
     if($("dsBrowser").style.display!=="none"){ e.preventDefault();
-      if(dsPid!==null) renderDsList(); else closeDataset(); return; }
+      if(dsPid!==null) backToDsList(); else closeDataset(); return; }
     if($("gallery").style.display!=="none"){ e.preventDefault(); closeGallery(); return; }
     return;
   }
+  if($("addMoreModal").style.display!=="none") return;  // modal nạp thêm mở: không dùng phím tắt gán
   if($("zoneModal").style.display!=="none") return;  // zone editor mở: không dùng phím tắt khác
   if($("preview").style.display!=="none") return;
   if($("dsBrowser").style.display!=="none") return;  // dataset mở: không dùng phím tắt gán
   if($("gallery").style.display!=="none") return;   // gallery mở: không dùng phím tắt gán
   if(reviewMode) return;
+  if(gridMode) return;   // chế độ lưới có ô ID + Enter riêng, không dùng phím tắt từng-track
   if(STATE!=="label"&&STATE!=="commit") return;
   const inInput = document.activeElement===$("pidIn");
   if(e.key==="Enter"){e.preventDefault();assignFromInput();return;}
@@ -1125,11 +2144,13 @@ document.addEventListener("keydown",e=>{
   if(e.key==="ArrowRight"){e.preventDefault();next();return;}
   if(e.key==="ArrowLeft"){e.preventDefault();prev();return;}
   if((e.key==="s"||e.key==="S")&&!inInput){e.preventDefault();skip();return;}
+  if((e.key==="u"||e.key==="U")&&!inInput){e.preventDefault();jumpNextUnseen();return;}
   if(e.key==="Delete"){e.preventDefault();delTrack();return;}
   if(/^[0-9]$/.test(e.key)&&!inInput){ $("pidIn").focus(); $("pidIn").value+=e.key; e.preventDefault(); }
 });
 
 dsBandInit();
+gridBandInit();
 loadState();
 </script>
 </body>

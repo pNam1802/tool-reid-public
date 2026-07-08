@@ -38,6 +38,9 @@ identity qua các đợt và các camera.
 - 👥 **Gallery "Người đã có"**: xem/đối chiếu mọi identity đang có khi gán nhãn.
 - 🗂 **Trình duyệt Dataset**: xem từng ID, mọi ảnh theo split/camera, **kéo
   chọn nhiều ảnh để xóa**, đặt ảnh đại diện, xóa hẳn người.
+- 🤖 **Gợi ý ID tự động (ReID)**: gom cụm các track cùng người bằng model ReID
+  (TransReID/OSNet ONNX) rồi điền sẵn ID để bạn chỉ việc soát/sửa — *cần bạn tự
+  thêm file model*, xem [§1 Cài đặt](#1-cài-đặt).
 - 🧹 **Chống camera-bias**: người chỉ xuất hiện ở 1 camera được đưa vào gallery
   làm *distractor* (không thành identity train) — đánh giá sát thực tế hơn.
 
@@ -46,15 +49,28 @@ identity qua các đợt và các camera.
 ## 1. Cài đặt
 
 ```bash
-pip install ultralytics supervision opencv-python numpy
+pip install ultralytics supervision opencv-python numpy onnxruntime
+# GPU: dùng onnxruntime-gpu thay cho onnxruntime để bước Crop + Gợi ý ID nhanh hơn
 ```
 
 - **`label_server.py`** (web + điều phối) chỉ dùng **thư viện chuẩn Python** —
-  không cần fastapi/streamlit. Các thư viện trên là để `extract_crops.py` chạy
-  (YOLO + ByteTrack + OpenCV).
-- Cần file model **`head_detect.pt`** đặt cùng thư mục với `head_detect.py`
-  (đã kèm trong repo).
-- **Python 3.10+**. Có **GPU** thì bước Crop nhanh hơn nhiều (không bắt buộc).
+  không cần fastapi/streamlit. Các thư viện trên là để `extract_crops.py`
+  (YOLO + ByteTrack + OpenCV) và `suggest_ids_onnx.py` (ReID ONNX) chạy.
+- **Python 3.10+**. Có **GPU** thì Crop + Gợi ý ID nhanh hơn nhiều (không bắt buộc).
+
+### Model cần có
+
+| Model | Dùng cho | Trong repo? |
+|---|---|---|
+| **`head_detect.pt`** (~15MB) | detect đầu người ở bước **Crop** | ✅ **đã kèm** — Crop chạy ngay |
+| **`transreid_reid.onnx`** (ReID) | tính năng **🤖 Gợi ý ID** | ❌ **bạn tự thêm** (quá lớn cho GitHub) |
+
+> 🤖 **File model ReID KHÔNG có trong repo** (đã `.gitignore` mọi `*.onnx/*.pth`).
+> Bạn tự đặt model ReID của mình tên **`transreid_reid.onnx`** ở thư mục gốc,
+> hoặc sửa `MODEL_PATH` trong `suggest_ids_onnx.py`. Model cần input
+> `[1,3,256,128]` + 1 input phụ (`cam_label`/`view_label`) và output feature
+> (chuẩn export TransReID/OSNet — xem `reid_onnx.py`). **Không có model vẫn dùng
+> được bình thường**, chỉ là gán ID tay thay vì bấm nút Gợi ý.
 
 > 📦 **Dataset & video KHÔNG nằm trong repo** (đã `.gitignore`). Mỗi người tự bỏ
 > video vào `video/`; thư mục `myreid/` sẽ tự sinh và lớn dần trên máy bạn.
@@ -131,6 +147,10 @@ Bấm *Bắt đầu Crop + Montage*. Server lần lượt:
 - **Nút "👥 Người đã có"** — gallery toàn bộ identity đang có trong dataset, tìm
   theo ID; bấm 1 người để gán lại ID cũ cho track hiện tại.
 - **"Xem lại theo ID"** — gom track theo ID để soát lại trước khi gộp.
+- **Nút "🤖 Gợi ý ID"** — chạy `suggest_ids_onnx.py`: embed mọi track bằng model
+  ReID rồi gom cụm cùng người (Union-Find theo cosine) và điền sẵn ID để bạn chỉ
+  soát/sửa. *Ngưỡng chặt để thà tách dư còn hơn gộp nhầm.* Cần file model ReID
+  (xem §1); không có model thì bỏ qua nút này, gán tay như thường.
 
 **Quy trình gán hiệu quả:** label hết **Cam 1** trước (mỗi người 1 ID mới) →
 sang **Cam 2/3**: đối chiếu "Người đã có" / "ID đã gán", người cũ gõ đúng ID cũ,
@@ -182,6 +202,9 @@ ReID/
 ├── extract_frame.py      # lấy 1 frame video cho trình vẽ zone
 ├── head_detect.py / .pt  # model detect đầu người (KHÔNG SỬA)
 ├── scale_box.py          # mở rộng box đầu → vùng upbody (KHÔNG SỬA)
+├── suggest_ids_onnx.py   # 🤖 Gợi ý ID: gom cụm track cùng người bằng ReID
+├── reid_onnx.py          # wrapper trích feature ReID từ file .onnx
+├── transreid_reid.onnx   # ⚠️ MODEL ReID — bạn TỰ THÊM (không có trong repo)
 │
 ├── video/                # 📂 ĐẶT VIDEO VÀO ĐÂY  (không commit)
 ├── zones.json            # zone (ROI) theo camera         (tự sinh)
@@ -198,7 +221,8 @@ ReID/
 ```
 
 > Các thư mục dữ liệu (`video/`, `crops/`, `montages/`, `myreid/`) và `labels.csv`
-> đã được `.gitignore` — repo chỉ chứa code + model.
+> đã được `.gitignore` — repo **chỉ chứa code** + `head_detect.pt`. Model ReID
+> (`*.onnx/*.pth`), dataset và mọi ảnh người **không** nằm trong repo (PII).
 
 ---
 
@@ -216,6 +240,14 @@ Mở **`label_server.py`**, sửa block CONFIG ở đầu file:
 | `TEST_RATIO` | 0.3 | tỉ lệ identity (≥2 cam) đưa vào test khi gộp |
 | `SINGLE_CAM_MODE` | `"distractor"` | người 1 camera: `distractor` (vào gallery) hoặc `drop` (bỏ) |
 | `HOST` / `PORT` | 127.0.0.1 / 8000 | địa chỉ web server |
+
+**Tính năng 🤖 Gợi ý ID** cấu hình trong `suggest_ids_onnx.py`:
+
+| Biến | Mặc định | Ý nghĩa |
+|---|---|---|
+| `MODEL_PATH` | `transreid_reid.onnx` | đường dẫn model ReID của bạn |
+| `CROSS_THRESH` | 0.60 | ngưỡng cosine gom 2 track **khác** camera (thấp → gom thoáng hơn) |
+| `SAME_CAM_EXTRA` | 0.15 | cùng camera cộng thêm ngần này (→ 0.75) |
 
 ---
 
@@ -257,7 +289,8 @@ trúc giống hệt Market-1501 (`bounding_box_train`, `query`, `bounding_box_te
 
 ## Script phụ (không bắt buộc)
 
-`pipeline.py` (dashboard Streamlit cũ), `label_manual.py` (gán nhãn Streamlit cũ),
-`build_dataset.py`, `embed_and_suggest.py` (gợi ý gộp track bằng embedding OSNet)
-là công cụ **độc lập/đời cũ**, không thuộc luồng chính `label_server.py`. Giữ lại
-để tham khảo.
+- `build_dataset.py` — dựng dataset Market-1501 từ `labels.csv` bằng **dòng lệnh**
+  (bản độc lập của bước "Gộp vào dataset"; web đã làm sẵn việc này).
+- `pipeline.py` (dashboard Streamlit cũ), `label_manual.py` (gán nhãn Streamlit
+  cũ), `embed_and_suggest.py` (gợi ý gộp track đời cũ) — công cụ **đời cũ**,
+  không thuộc luồng chính `label_server.py`, giữ lại để tham khảo.

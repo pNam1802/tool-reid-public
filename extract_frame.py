@@ -1,5 +1,5 @@
 # ===================== CẤU HÌNH — server ghi đè khi gọi =====================
-VIDEO_PATH = "video/20260613_1510_cam5.mp4"   # đường dẫn video (label_server.py ghi vào)
+VIDEO_PATH = "video/20260613_1530_cam4.mp4"   # đường dẫn video (label_server.py ghi vào)
 POS        = 0.1                  # vị trí frame: 0.0 = frame ĐẦU, 1.0 = frame CUỐI
 # ============================================================================
 #
@@ -33,7 +33,7 @@ def read_frame_at(cap, pos: float):
         ok, frame = cap.read()
         if ok and frame is not None:
             return True, frame
-        log(f"[fallback] đọc frame #{target} thất bại, thử cách khác")
+        log(f"[fallback] doc frame #{target} that bai, thu cach khac")
 
     # Cách 2: nhảy theo tỉ lệ thời lượng (một số codec không cho seek theo frame)
     cap.set(cv2.CAP_PROP_POS_AVI_RATIO, pos)
@@ -50,25 +50,25 @@ def read_frame_at(cap, pos: float):
 def main():
     cap = cv2.VideoCapture(VIDEO_PATH)
     if not cap.isOpened():
-        log(f"[LỖI] Không mở được video: {VIDEO_PATH}")
+        log(f"[LOI] Khong mo duoc video: {VIDEO_PATH}")
         sys.exit(1)
 
     ok, frame = read_frame_at(cap, POS)
     cap.release()
 
     if not ok or frame is None:
-        log(f"[LỖI] Không đọc được frame nào từ: {VIDEO_PATH}")
+        log(f"[LOI] Khong doc duoc frame nao tu: {VIDEO_PATH}")
         sys.exit(2)
 
     # Mã hoá JPEG (giữ NGUYÊN kích thước gốc để toạ độ zone khớp với extract_crops)
     ok, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 90])
     if not ok:
-        log("[LỖI] Mã hoá JPEG thất bại")
+        log("[LOI] Ma hoa JPEG that bai")
         sys.exit(3)
 
     h, w = frame.shape[:2]
-    log(f"Frame {w}x{h} tại POS={POS} -> {len(buf)} bytes")
-    sys.stdout.buffer.write(buf.tobytes())   # CHỈ ghi bytes ảnh ra stdout
+    log(f"Frame {w}x{h} tai POS={POS} -> {len(buf)} bytes")
+    sys.stdout.buffer.write(buf.tobytes())   # CHI ghi bytes anh ra stdout
     sys.stdout.buffer.flush()
 
 
