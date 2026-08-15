@@ -3,7 +3,6 @@
 Công cụ **thu thập & gán nhãn** dữ liệu Person Re-Identification (Re-ID) từ hệ
 thống nhiều camera, xây dựng dataset chuẩn **Market-1501** để train model Re-ID
 (TransReID, OSNet…).
-
 Toàn bộ chạy qua **một web app duy nhất** — `label_server.py` — tự dẫn bạn theo
 từng bước, giữ trạng thái, lưu kết quả tự động.
 
